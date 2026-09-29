@@ -27,11 +27,8 @@ Dashboard ini tidak memerlukan server, Supabase, Vercel, atau GitHub. **Spreadsh
 ### 2. Tempel script
 1. Di spreadsheet, buka **Extensions → Apps Script**.
 2. Ganti isi `Code.gs` dengan isi file [`Code.gs`](Code.gs).
-3. Buat 5 file HTML: klik **+ → HTML**, lalu beri nama **persis** seperti berikut (tanpa `.html`) dan tempel isinya:
+3. Buat 2 file HTML: klik **+ → HTML**, beri nama **persis** seperti berikut (tanpa `.html`), lalu tempel isinya:
    - `Index` ← [Index.html](Index.html)
-   - `App` ← [App.html](App.html)
-   - `Bridge` ← [Bridge.html](Bridge.html)
-   - `Styles` ← [Styles.html](Styles.html)
    - `Publik` ← [Publik.html](Publik.html)
 4. Klik **Simpan**.
 5. Kembali ke spreadsheet dan muat ulang halamannya. Akan muncul menu **SAPA PAJAK → Siapkan sheet SAPA**. Klik menu itu dan izinkan akses saat diminta. Sheet `SAPA_TindakLanjut` dan `SAPA_Pengaturan` akan dibuat otomatis.

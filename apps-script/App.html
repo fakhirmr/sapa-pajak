@@ -1,0 +1,473 @@
+<script>
+(function(){
+"use strict";
+const TAHAP=["PETAKAN","SAPA","LAYANI","EDUKASI","DATAKAN","DAMPINGI","TINDAK LANJUT","PANTAU"];
+const STATUS={belum:{l:"Belum disapa",d:"Masih di daftar sasaran, belum ada kontak atau kunjungan."},kuning:{l:"Proses",d:"Penelusuran, verifikasi, pelayanan, atau koordinasi sedang berjalan."},hijau:{l:"Selesai",d:"SPPT tersampaikan atau status kasus sudah jelas dan tindak lanjut tuntas."},merah:{l:"Perlu tindak lanjut",d:"Butuh tindakan PIC, bidang, stakeholder, atau perhatian Kepala UPTD."}};
+const STATUS_ORDER=["hijau","kuning","merah","belum"];
+const PENYEBAB={alamat_tidak_jelas:"Alamat tidak jelas/tidak lengkap",pemekaran:"Perubahan alamat akibat pemekaran",wp_pindah:"WP pindah alamat",wp_luar_wilayah:"Alamat WP di luar wilayah",kepemilikan:"Kepemilikan berubah, belum dilaporkan",objek_berubah:"Kondisi objek berubah",lainnya:"Lainnya",belum_diketahui:"Belum diketahui"};
+const HASIL={"":"Belum jelas",tersampaikan:"Berhasil tersampaikan",alamat_tidak_ditemukan:"Alamat tidak ditemukan/tidak lengkap",wp_pindah:"WP pindah",perubahan_data:"Perubahan kepemilikan/data",perlu_tindak_lanjut:"Memerlukan tindak lanjut"};
+const KEPUASAN={"":"Belum disurvei",sangat_puas:"Sangat puas",puas:"Puas",cukup:"Cukup",tidak_puas:"Tidak puas"};
+const PIC_OPTS=["","Tim Lapangan","Tim Administrasi","Tim Sosialisasi & Edukasi","Tim Monitoring & Evaluasi","Bidang Pendapatan Pajak I","Bidang Pengendalian","Kelurahan/RT","Kepala UPTD"];
+const DEFAULT_CFG={kelurahan:"Sempaja Barat",target:400,mulai:"2026-09-28",hari:60};
+
+const S={rekap:null,db:null,user:null,downloads:null,live:false,records:new Map(),cfg:{...DEFAULT_CFG},canWrite:true,readOnly:false,
+  filter:{q:"",status:"",tahap:"",rt:"",penyebab:"",lokasi:"",blok:""},sort:"no",groupBy:null,limit:60,editing:null,myId:null,names:{}};
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pct=(a,b)=>b?Math.round(a/b*1000)/10:null;
+const fmtPct=v=>v==null?"–":(Number.isInteger(v)?v:v.toFixed(1)).toString().replace(".",",")+"%";
+const nf=new Intl.NumberFormat("id-ID");
+const fmtPct2=(v,d=2)=>v==null||!isFinite(v)?"–":v.toLocaleString("id-ID",{minimumFractionDigits:d,maximumFractionDigits:d})+"%";
+const ICON={doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h8M9 17h8"/></svg>',
+  send:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="11"/><path d="m8 8 8 8M16 8l-8 8" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>',
+  alert:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="11"/><path d="M12 6.5v7" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cx="12" cy="17.3" r="1.5" fill="#fff"/></svg>',
+  gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3.2"/><path d="M12 1.8v3M12 19.2v3M4.8 4.8l2.1 2.1M17.1 17.1l2.1 2.1M1.8 12h3M19.2 12h3M4.8 19.2l2.1-2.1M17.1 6.9l2.1-2.1"/></svg>'};
+const DEMO_REKAP={tanggal:"",periode:"",totalKembali:1600,perBlok:{"001":160,"002":150,"003":140,"004":150,"005":130,"006":140,"007":120,"008":130,"009":110,"010":120,"011":130,"012":120}};
+const DEFAULT_REKAP={tanggal:"",periode:"",totalKembali:null,perBlok:{}};
+
+/* ---------- data contoh (tidak disimpan) ---------- */
+function demoRecords(){
+  let seed=7;const r=()=>{seed=(seed*16807)%2147483647;return (seed-1)/2147483646};
+  const pick=a=>a[Math.floor(r()*a.length)];
+  const depan=["Siti","Ahmad","Rahmat","Nur","Budi","Dewi","Hendra","Yuliana","Syamsul","Rina","Agus","Fitri","Muhammad","Sri","Andi","Wahyuni","Eko","Hasanah","Dedi","Lestari"];
+  const belakang=["Rahayu","Hidayat","Saputra","Aminah","Setiawan","Kurniawan","Wulandari","Hakim","Susanto","Maulana","Pratama","Halimah","Gunawan","Nurjanah"];
+  const jalan=["Jl. P. M. Noor","Jl. Pramuka","Jl. Wahid Hasyim II","Perum Sempaja Lestari","Jl. Padat Karya","Gg. Kenanga","Jl. Batu Cermin","Perum Bengkuring","Jl. Sejati"];
+  const out=[];const now=Date.parse("2026-10-20T09:00:00+08:00");
+  for(let i=0;i<400;i++){
+    const rt=String(1+Math.floor(r()*28)).padStart(3,"0");
+    const pen=pick(["alamat_tidak_jelas","alamat_tidak_jelas","pemekaran","pemekaran","pemekaran","wp_pindah","kepemilikan","kepemilikan","objek_berubah","belum_diketahui"]);
+    const p=r();let tahap=0,status="belum",hasil="";
+    if(p>.18){tahap=1+Math.floor(r()*7);status=r()>.55?"hijau":(r()>.3?"kuning":"merah");}
+    if(tahap>=3&&r()>.25){hasil=pen==="kepemilikan"||pen==="objek_berubah"?"perubahan_data":pen==="wp_pindah"?pick(["wp_pindah","tersampaikan"]):pick(["tersampaikan","tersampaikan","alamat_tidak_ditemukan","perlu_tindak_lanjut"]);}
+    if(status==="hijau"&&!hasil){hasil="tersampaikan";tahap=Math.max(tahap,4);}
+    const layak=hasil==="tersampaikan"||(hasil==="wp_pindah"&&r()>.4)||(tahap>=4&&hasil===""&&r()>.5);
+    const temuan=hasil==="perubahan_data"||(pen==="kepemilikan"&&tahap>=4);
+    const perluTL=hasil==="perlu_tindak_lanjut"||temuan||status==="merah";
+    out.push({id:"demo-"+i,nop:`64.72.050.0${String(10+Math.floor(r()*4)).padStart(2,"0")}.${String(1+Math.floor(r()*12)).padStart(3,"0")}-${String(1+Math.floor(r()*2400)).padStart(4,"0")}.0`,
+      nama:pick(depan)+" "+pick(belakang),alamat:pick(jalan)+" No. "+(1+Math.floor(r()*120)),rt,penyebab:pen,tahap,status,hasil,
+      layakUlang:layak,tersampaikanUlang:hasil==="tersampaikan",temuanData:temuan,dataDiproses:temuan&&r()>.35,perluTL,
+      pic:perluTL?pick(["Bidang Pendapatan Pajak I","Tim Administrasi","Kelurahan/RT"]):(tahap?"Tim Lapangan":""),
+      kendala:status==="merah"&&r()>.5?pick(["Rumah kosong, tetangga tidak tahu alamat baru","RT belum terbentuk setelah pemekaran","Objek sudah dijual, pembeli belum balik nama","Alamat di SPPT masih kelurahan lama"]):"",
+      kepuasan:tahap>=3&&r()>.35?pick(["sangat_puas","puas","puas","puas","cukup","tidak_puas"]):"",catatan:"",
+      updatedAt:new Date(now-Math.floor(r()*20*864e5)).toISOString(),updatedBy:null,demo:true});
+  }
+  return out;
+}
+let DEMO=null;
+function rows(){ if(S.records.size) return [...S.records.values()]; DEMO=DEMO||demoRecords(); return DEMO; }
+const isDemo=()=>S.records.size===0;
+
+/* ---------- perhitungan ---------- */
+function compute(list){
+  const target=Math.max(1,Number(S.cfg.target)||list.length||1);
+  const c={total:list.length,target,byTahap:TAHAP.map(()=>0),byStatus:{hijau:0,kuning:0,merah:0,belum:0},
+    ditelusuri:0,jelas:0,layak:0,tersampaikan:0,temuan:0,diproses:0,perluTL:0,tlSelesai:0,responden:0,puas:0};
+  for(const x of list){
+    c.byTahap[x.tahap||0]++; c.byStatus[x.status||"belum"]=(c.byStatus[x.status||"belum"]||0)+1;
+    if((x.tahap||0)>=1) c.ditelusuri++;
+    if(x.hasil) c.jelas++;
+    if(x.layakUlang){c.layak++; if(x.tersampaikanUlang) c.tersampaikan++;}
+    if(x.temuanData){c.temuan++; if(x.dataDiproses) c.diproses++;}
+    if(x.perluTL){c.perluTL++; if(x.status==="hijau") c.tlSelesai++;}
+    if(x.kepuasan){c.responden++; if(x.kepuasan==="puas"||x.kepuasan==="sangat_puas") c.puas++;}
+  }
+  c.kpi=[
+    {k:"Penelusuran SPPT sasaran",a:c.ditelusuri,b:target,t:90,note:"sudah disapa ÷ sasaran pilot"},
+    {k:"Kejelasan status",a:c.jelas,b:target,t:90,note:"hasil jelas ÷ sasaran pilot"},
+    {k:"Keberhasilan penyampaian ulang",a:c.tersampaikan,b:c.layak,t:70,note:"tersampaikan ÷ layak disampaikan ulang"},
+    {k:"Tindak lanjut perubahan data",a:c.diproses,b:c.temuan,t:90,note:"diproses/diteruskan ÷ temuan"},
+    {k:"Penyelesaian tindak lanjut",a:c.tlSelesai,b:c.perluTL,t:80,note:"selesai ÷ kasus perlu tindak lanjut"},
+    {k:"Kepuasan Wajib Pajak",a:c.puas,b:c.responden,t:80,note:"puas/sangat puas ÷ responden"}];
+  return c;
+}
+
+/* ---------- render ---------- */
+function render(){
+  const list=rows(); const c=compute(list);
+  $("#demoBanner").hidden=!isDemo()||S.readOnly;
+  $("#pKel").textContent="Kel. "+(S.cfg.kelurahan||"–");
+  $("#pTarget").textContent=nf.format(c.target)+" SPPT sasaran";
+  const start=Date.parse(S.cfg.mulai+"T00:00:00+08:00"); const hariKe=Math.floor((Date.now()-start)/864e5)+1; const H=Number(S.cfg.hari)||60;
+  const hk=isNaN(start)?0:Math.max(0,Math.min(H,hariKe)); $("#mDurasi").textContent=H+" Hari"; $("#mDurBar").style.width=(hk/H*100)+"%";
+  $("#mHari").textContent=isNaN(start)?"–":hariKe<1?`mulai ${new Date(start).toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"})}`:hariKe>H?`selesai (${H} hari)`:`Hari ke-${hariKe} (${fmtPct2(hariKe/H*100,0)})`;
+  renderRingkasan(list);
+  document.querySelectorAll('[data-act]').forEach(b=>b.disabled=S.readOnly);
+
+  const max=Math.max(1,...c.byTahap);
+  $("#siklus").innerHTML=TAHAP.map((t,i)=>`<button type="button" class="step" data-tahap="${i}" style="background:none;border-top:0;border-left:0;border-bottom:0;text-align:left${S.filter.tahap===String(i)?';box-shadow:inset 0 0 0 2px var(--accent)':''}"><span class="n">${String(i+1).padStart(2,"0")}</span><span class="t">${t}</span><span class="c">${nf.format(c.byTahap[i])}</span><span class="bar" style="width:${c.byTahap[i]/max*100}%"></span></button>`).join("")
+    +`<div class="step eval"><span class="n">↻</span><span class="t">EVALUASI</span><span class="c">Bandingkan dengan baseline, lalu petakan siklus berikutnya</span></div>`;
+
+  $("#kpis").innerHTML=c.kpi.map((k,i)=>{const v=pct(k.a,k.b);const cls=v==null?"":v>=k.t?"ok":v>=k.t*.6?"warn":"bad";
+    return `<div class="kpi ${cls}"><span class="lbl">${i+1}. ${k.k}</span><div class="val"><b>${fmtPct(v)}</b><small class="num">${nf.format(k.a)} / ${nf.format(k.b)}</small></div>
+    <div class="track" role="img" aria-label="${k.k} ${fmtPct(v)}, target ${k.t}%"><div class="fill" style="width:${Math.min(100,v||0)}%"></div><div class="tgt" style="left:${k.t}%"></div></div>
+    <div class="foot"><span>${k.note}</span><span>target ≥${k.t}%</span></div></div>`}).join("");
+
+  const perluData=list.filter(x=>x.temuanData&&!x.dataDiproses).length;
+  $("#panelAStats").innerHTML=[
+    [c.total,"SPPT sasaran di register"],[list.filter(x=>x.tersampaikanUlang).length,"berhasil disampaikan ulang"],[list.filter(x=>!x.tersampaikanUlang).length,"masih berstatus kembali"],
+    [c.ditelusuri,"sudah ditelusuri"],[c.temuan,"perlu pemutakhiran data"],[perluData,"temuan data belum diproses"]]
+    .map(([n,l])=>`<div class="stat"><b>${nf.format(n)}</b><span>${l}</span></div>`).join("");
+
+  const hasLok=list.some(x=>x.lokasi); const G=S.groupBy||(hasLok?"lokasi":"rt"); const gk=x=>G==="lokasi"?(x.lokasi||"–"):(x.rt||"–");
+  $("#grpPick").hidden=!hasLok; $("#grpTitle").textContent=G==="lokasi"?"Sebaran per lokasi":"Sebaran per RT objek";
+  $("#grpPick").querySelectorAll("button").forEach(b=>{b.classList.add("g");b.setAttribute("aria-pressed",b.dataset.grp===G)});
+  const glabel=k=>G==="lokasi"?k:"RT "+k;
+  const rt={};for(const x of list){const k=gk(x);(rt[k]=rt[k]||{hijau:0,kuning:0,merah:0,belum:0,n:0,unclear:0});rt[k][x.status||"belum"]++;rt[k].n++;if(!x.hasil)rt[k].unclear++;}
+  const rts=Object.entries(rt).sort((a,b)=>b[1].unclear-a[1].unclear||b[1].n-a[1].n);const rmax=Math.max(1,...rts.map(r=>r[1].n));
+  $("#rtList").innerHTML=rts.length?rts.map(([k,v])=>`<button type="button" class="rtrow" data-${G}="${esc(k)}" title="${esc(glabel(k))}: ${v.n} SPPT" style="background:none;border:0;padding:0;text-align:left"><span class="nm${G==="rt"?" mono":""}">${esc(glabel(k))}</span><span class="bars" style="width:${v.n/rmax*100}%">${STATUS_ORDER.map(s=>`<i style="width:${v[s]/v.n*100}%;background:var(--${s==="belum"?"abu":s})"></i>`).join("")}</span><span class="num muted" style="white-space:nowrap;text-align:right">${v.unclear} blm jelas</span></button>`).join(""):`<p class="muted">Belum ada data RT.</p>`;
+
+  const tot=Math.max(1,c.total);
+  $("#statusStack").innerHTML=STATUS_ORDER.map(s=>`<i style="width:${c.byStatus[s]/tot*100}%;background:var(--${s==="belum"?"abu":s})"></i>`).join("");
+  $("#statusBig").innerHTML=STATUS_ORDER.map(s=>`<button type="button" class="sb ${s}" data-status="${s}" aria-pressed="${S.filter.status===s}"><span>${STATUS[s].l.toUpperCase()}</span><b>${nf.format(c.byStatus[s])}</b><p>${STATUS[s].d}</p></button>`).join("");
+
+  const merah=list.filter(x=>x.status==="merah").sort((a,b)=>String(a.updatedAt).localeCompare(String(b.updatedAt)));
+  const kepemilikan=list.filter(x=>x.temuanData&&!x.dataDiproses);
+  const blmJelas=list.filter(x=>(x.tahap||0)>=1&&!x.hasil);
+  const kendala=list.filter(x=>x.kendala&&x.status!=="hijau");
+  const top=rts.slice(0,3).filter(r=>r[1].unclear>0);
+  const li=(arr,why)=>arr.length?`<ul>${arr.slice(0,4).map(x=>`<li><button type="button" data-open="${esc(x.id)}"><span class="mono">${esc(x.nop||"(tanpa NOP)")}</span><span class="why">${esc(why(x))}</span></button></li>`).join("")}${arr.length>4?`<li class="muted">+${arr.length-4} lainnya</li>`:""}</ul>`:`<span class="muted">Tidak ada.</span>`;
+  $("#attn").innerHTML=`
+    <div class="item"><div class="row"><h3>${G==="lokasi"?"Lokasi":"RT"} dengan SPPT belum jelas terbanyak</h3></div>${top.length?`<ul>${top.map(([k,v])=>`<li><button type="button" data-${G}="${esc(k)}"><span class="mono">${esc(glabel(k))}</span><span class="why">${v.unclear} dari ${v.n} SPPT belum jelas</span></button></li>`).join("")}</ul>`:`<span class="muted">Tidak ada.</span>`}</div>
+    <div class="item"><div class="row"><h3>Kasus merah, perlu tindak lanjut</h3><b class="${merah.length?"alert":""}">${merah.length}</b></div>${li(merah,x=>x.pic?`PIC: ${x.pic}`:"PIC belum ditentukan")}</div>
+    <div class="item"><div class="row"><h3>Perubahan kepemilikan/data belum diproses</h3><b>${kepemilikan.length}</b></div>${li(kepemilikan,x=>x.nama||"")}</div>
+    <div class="item"><div class="row"><h3>Sudah disapa, status belum jelas</h3><b>${blmJelas.length}</b></div>${li(blmJelas,x=>TAHAP[x.tahap||0])}</div>
+    <div class="item"><div class="row"><h3>Kendala lapangan &amp; kebutuhan koordinasi</h3><b>${kendala.length}</b></div>${li(kendala,x=>x.kendala)}</div>`;
+
+  renderTable(list);
+}
+
+function filtered(list){
+  const f=S.filter,q=f.q.trim().toLowerCase();
+  return list.filter(x=>(!f.status||(x.status||"belum")===f.status)&&(!f.tahap||String(x.tahap||0)===f.tahap)&&(!f.rt||(x.rt||"–")===f.rt)&&(!f.penyebab||x.penyebab===f.penyebab)&&(!f.lokasi||(x.lokasi||"–")===f.lokasi)&&(!f.blok||String(x.nop||"").split(".")[4]?.split("-")[0]===f.blok)
+    &&(!q||[x.nop,x.nama,x.alamat,x.alamatWp,x.blokNo,x.lokasi,x.pic,x.kendala].some(v=>String(v||"").toLowerCase().includes(q))))
+   .sort(S.sort==="baru"?(a,b)=>String(b.updatedAt||"").localeCompare(String(a.updatedAt||""))||(a.no||0)-(b.no||0)
+     :(a,b)=>(a.no??1e9)-(b.no??1e9)||String(a.nop).localeCompare(String(b.nop)));
+}
+function fillSelect(el,opts,cur){el.innerHTML=opts.map(([v,l])=>`<option value="${esc(v)}"${v===cur?" selected":""}>${esc(l)}</option>`).join("");}
+function renderTable(list){
+  const rtKeys=[...new Set(list.map(x=>x.rt||"–"))].sort();
+  fillSelect($("#fStatus"),[["","Semua status"],...STATUS_ORDER.map(s=>[s,STATUS[s].l])],S.filter.status);
+  fillSelect($("#fTahap"),[["","Semua tahap"],...TAHAP.map((t,i)=>[String(i),t])],S.filter.tahap);
+  fillSelect($("#fRt"),[["","Semua RT"],...rtKeys.map(k=>[k,"RT "+k])],S.filter.rt);
+  const lokKeys=[...new Set(list.map(x=>x.lokasi).filter(Boolean))];
+  $("#fLokasi").hidden=!lokKeys.length; fillSelect($("#fLokasi"),[["","Semua lokasi"],...lokKeys.map(k=>[k,k])],S.filter.lokasi);
+  const bKeys=[...new Set(list.map(x=>(String(x.nop||"").split(".")[4]||"").split("-")[0]).filter(Boolean))].sort();
+  fillSelect($("#fBlok"),[["","Semua blok"],...bKeys.map(k=>[k,"Blok "+k])],S.filter.blok);
+  $("#fSort").value=S.sort;
+  fillSelect($("#fPenyebab"),[["","Semua penyebab"],...Object.entries(PENYEBAB)],S.filter.penyebab);
+  const f=filtered(list); const shown=f.slice(0,S.limit);
+  const src=[...new Set(list.map(x=>x.sumber).filter(Boolean))];
+  $("#regCount").textContent=isDemo()?"Menampilkan data contoh":`${nf.format(list.length)} SPPT tercatat${src.length?" · sumber: "+src.join(", "):""}`;
+  $("#tbody").innerHTML=shown.map(x=>{const flags=[x.layakUlang&&"Layak ulang",x.temuanData&&(x.dataDiproses?"Data diproses":"Temuan data"),x.perluTL&&"Perlu TL"].filter(Boolean);
+    return `<tr data-open="${esc(x.id)}" tabindex="0"><td><span class="mono">${esc(x.nop||"(tanpa NOP)")}</span><span class="sub">${esc(x.nama||"–")}</span></td>
+    <td>${esc(x.alamat||"–")}<span class="sub"><span class="mono">RT ${esc(x.rt||"–")}</span>${x.lokasi?" · "+esc(x.lokasi):""}${x.no?` · No. ${x.no}`:""}</span></td><td style="max-width:240px">${esc(x.alamatWp||"–")}</td><td>${esc(PENYEBAB[x.penyebab]||"–")}</td>
+    <td><span class="tahap">${TAHAP[x.tahap||0]}</span></td><td>${esc(HASIL[x.hasil||""])}${flags.length?`<div class="flags">${flags.map(t=>`<span class="flag">${t}</span>`).join("")}</div>`:""}</td>
+    <td><span class="pill ${x.status||"belum"}">${STATUS[x.status||"belum"].l}</span></td><td>${esc(x.pic||"–")}</td>
+    <td class="num muted">${x.updatedAt?new Date(x.updatedAt).toLocaleDateString("id-ID",{day:"numeric",month:"short"}):"–"}${x.updatedBy&&S.names[x.updatedBy]?`<span class="sub">${esc(S.names[x.updatedBy])}</span>`:""}</td></tr>`}).join("");
+  $("#regEmpty").hidden=f.length>0;
+  $("#regShow").textContent=f.length?`Menampilkan ${nf.format(shown.length)} dari ${nf.format(f.length)} SPPT`:"";
+  $("#btnMore").hidden=shown.length>=f.length;
+  resolveNames(shown.map(x=>x.updatedBy).filter(Boolean));
+}
+let nameReq=null;
+async function resolveNames(ids){
+  if(!S.user||!ids.length) return; const need=[...new Set(ids)].filter(i=>!(i in S.names)); if(!need.length||nameReq) return;
+  nameReq=S.user.profiles(need).then(ps=>{let changed=false;for(const i of need){S.names[i]=(ps&&ps[i]&&ps[i].name)||"";changed=true}nameReq=null;if(changed) renderTable(rows());}).catch(()=>{nameReq=null});
+}
+
+/* ---------- ringkasan UPTD (Gambar 10) ---------- */
+function renderRingkasan(list){
+  const demoR=!S.rekap&&isDemo(), R=S.rekap||(demoR?DEMO_REKAP:DEFAULT_REKAP), num=v=>v==null||v===""?null:Number(v);
+  const induk=num(R.totalKembali), sb=list.length, lain=induk!=null?Math.max(0,induk-sb):null;
+  const selesai=list.filter(x=>x.status==="hijau").length, proses=sb-selesai;
+  const pI=v=>induk&&v!=null?v/induk*100:null, pS=v=>sb?v/sb*100:null;
+  $("#mTanggal").textContent=R.tanggal?new Date(R.tanggal+"T00:00:00").toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"}):"–";
+  $("#mPeriode").textContent=R.periode||"–";
+  $("#mTanggalLbl").textContent=demoR?"Data per tanggal (contoh)":"Data per tanggal";
+  const tile=(cls,icon,label,val,pv,sub)=>`<div class="tile ${cls}"><div class="th">${ICON[icon]}<div><div class="tl">${label}</div></div></div><div class="tv">${val==null?"–":nf.format(val)}</div><div class="tu">${sub||"SPPT PBB-P2"}</div>${pv===undefined?"":`<div class="tp">${fmtPct2(pv)}</div>`}</div>`;
+  $("#tiles").innerHTML=tile("biru","doc","Total SPPT Kembali Kel. Sempaja Selatan",induk,undefined,"rekap induk")
+    +tile("merah","alert","Objek Ternyata di Kel. Sempaja Barat",sb,pI(sb),"dari total SPPT kembali")
+    +tile("biru","x","Kembali karena Sebab Lain",lain,pI(lain),"dari total SPPT kembali")
+    +tile("hijau","send","Sudah Tersampaikan",selesai,pS(selesai),"dari objek di Sempaja Barat")
+    +tile("kuning","gear","Dalam Penanganan",proses,pS(proses),"dari objek di Sempaja Barat");
+  $("#rekapDemo").hidden=!demoR||S.readOnly;
+  const warn=[];
+  if(!demoR&&induk==null) warn.push("Jumlah SPPT kembali di rekap induk belum diisi. Klik “Perbarui rekap induk”.");
+  if(induk!=null&&sb>induk) warn.push(`Register berisi ${nf.format(sb)} SPPT, lebih banyak dari total SPPT kembali di rekap induk (${nf.format(induk)}).`);
+  $("#rekapWarn").hidden=!warn.length; $("#rekapWarn").textContent=warn.join(" ");
+
+  // donut: komposisi
+  const parts=[["accent",sb,"Objek di Sempaja Barat","SPPT salah kelurahan akibat pemekaran"],["line-strong",lain||0,"Sebab lain","alamat, WP pindah, kepemilikan, dll."]];
+  const T=Math.max(1,(induk!=null?induk:sb)), r=52, C=2*Math.PI*r; let off=0;
+  const arcs=parts.map(([col,v])=>{const len=Math.min(v,T)/T*C;const a=`<circle cx="75" cy="75" r="${r}" fill="none" stroke="var(--${col})" stroke-width="24" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 75 75)"/>`;off+=len;return a;}).join("");
+  $("#donutBox").innerHTML=`<svg class="donut" viewBox="0 0 150 150" role="img" aria-label="${fmtPct2(pI(sb),1)} SPPT kembali objeknya di Sempaja Barat"><circle cx="75" cy="75" r="${r}" fill="none" stroke="var(--surface-2)" stroke-width="24"/>${arcs}<text x="75" y="78" text-anchor="middle" font-size="22" font-weight="800">${induk!=null?fmtPct2(pI(sb),1):"–"}</text><text x="75" y="95" text-anchor="middle" font-size="9" fill="var(--ink-2)">objek di S. Barat</text></svg>
+    <div class="dleg">${parts.map(([col,v,l,d])=>`<div><i style="background:var(--${col})"></i><span><b>${l}</b> <b class="num">${nf.format(v)}</b> <span class="muted num">(${induk?fmtPct2(v/induk*100,1):"–"})</span><small>${d}</small></span></div>`).join("")}
+    <div><i style="background:transparent"></i><span class="muted">Total ${induk!=null?nf.format(induk):"–"} SPPT kembali di rekap induk Kel. Sempaja Selatan</span></div></div>`;
+
+  // per blok
+  const blokOf=x=>(String(x.nop||"").split(".")[4]||"–").split("-")[0];
+  const sbB={}; for(const x of list){const k=blokOf(x);sbB[k]=(sbB[k]||0)+1;}
+  const iB=R.perBlok||{}; const keys=[...new Set([...Object.keys(iB),...Object.keys(sbB)])];
+  const rowsB=keys.map(k=>({k,all:Number(iB[k])||0,sb:sbB[k]||0})).filter(r=>r.sb>0).sort((a,b)=>b.sb-a.sb);
+  const other=keys.filter(k=>!(sbB[k]>0)).reduce((a,k)=>a+(Number(iB[k])||0),0);
+  const bmax=Math.max(1,...rowsB.map(r=>Math.max(r.all,r.sb)));
+  $("#kecBox").innerHTML=rowsB.length?`<div class="bk">
+    <div class="legend"><span><i style="background:var(--accent)"></i>Objek di Sempaja Barat</span><span><i style="background:var(--line-strong)"></i>Total SPPT kembali di blok</span></div>
+    ${rowsB.map(r=>`<button type="button" class="bkrow" data-blok="${esc(r.k)}" title="Blok ${esc(r.k)}: ${r.sb} dari ${r.all||"?"} SPPT kembali"><span class="mono">Blok ${esc(r.k)}</span><span class="bb">${r.all?`<i class="all" style="width:${r.all/bmax*100}%"></i>`:""}<i class="sb" style="width:${r.sb/bmax*100}%"></i></span><span class="v"><b>${nf.format(r.sb)}</b>${r.all?` / ${nf.format(r.all)} <span class="muted">(${fmtPct2(r.sb/r.all*100,0)})</span>`:""}</span></button>`).join("")}
+    ${other?`<p class="muted" style="margin:2px 0 0">Blok lain tanpa objek di Sempaja Barat: ${nf.format(other)} SPPT kembali.</p>`:""}</div>`
+    :`<p class="muted">Belum ada data per blok.</p>`;
+
+  const st=[["hijau",selesai,"Sudah tersampaikan","status kasus jelas & tuntas"],["kuning",list.filter(x=>x.status==="kuning").length,"Dalam proses","penelusuran / verifikasi / koordinasi"],["merah",list.filter(x=>x.status==="merah").length,"Perlu tindak lanjut","butuh PIC / bidang / pimpinan"],["abu",list.filter(x=>(x.status||"belum")==="belum").length,"Belum disapa","belum ada kontak atau kunjungan"]];
+  $("#tlBox").innerHTML=`<div class="tlst">${st.map(([col,v,l,d])=>`<div><b style="background:var(--${col})">${nf.format(v)}</b><span>${l}<small>${d}</small></span></div>`).join("")}</div>`;
+}
+function openRekap(){
+  const R=S.rekap||DEFAULT_REKAP; const ro=S.readOnly||!S.db;
+  const pb=Object.entries(R.perBlok||{}).sort().map(([k,v])=>`${k}=${v}`).join("\n");
+  openDrawer(`<header><div><span class="eyebrow">Rekap induk</span><h2 id="drTitle">Tanggal data &amp; periode</h2></div><button class="btn ghost close" type="button" data-close>Tutup</button></header>
+  <form class="body" id="rekapForm">
+    <div class="grid2"><div class="field"><label for="rTgl">Data per tanggal</label><input id="rTgl" type="date" value="${esc(R.tanggal)}"></div>
+    <div class="field"><label for="rPer">Periode (tahun pajak)</label><input id="rPer" value="${esc(R.periode)}" placeholder="2026"></div></div>
+    <input id="rTot" type="hidden" value="${esc(R.totalKembali??"")}"><textarea id="rBlok" hidden>${esc(pb)}</textarea>
+    <p class="help">Total SPPT kembali (${nf.format(R.totalKembali||0)}) dan jumlah per blok dihitung otomatis dari sheet <b>${esc(R.sumber||"rekap induk")}</b>, sedangkan objek di Sempaja Barat dihitung dari sheet register. Untuk mengubah angkanya, perbarui isi sheet tersebut di spreadsheet.</p>
+  </form>
+  <footer><span></span><div class="actions"><button class="btn" type="button" data-close>Batal</button><button class="btn primary" type="submit" form="rekapForm" ${ro?"disabled":""}>Simpan</button></div></footer>`);
+  $("#rekapForm").addEventListener("submit",async e=>{e.preventDefault();const v=$("#rTot").value.trim();
+    const perBlok={};$("#rBlok").value.split(/\n/).forEach(l=>{const m=l.trim().match(/^(\w+)\s*[=:;,\t ]\s*(\d+)$/);if(m)perBlok[m[1].padStart(3,"0")]=parseInt(m[2],10);});
+    const body={tanggal:$("#rTgl").value,periode:$("#rPer").value.trim(),totalKembali:v===""?null:Math.max(0,parseInt(v,10)||0),perBlok};
+    try{await S.db.doc("config/rekap").set(body);toast("Rekap induk disimpan");closeDrawer();}catch(err){writeFail(err)}});
+}
+/* ---------- drawer ---------- */
+function openDrawer(html){ $("#drawer").innerHTML=html; $("#drawer").hidden=false; $("#scrim").hidden=false; const f=$("#drawer").querySelector("input,select,textarea,button:not(.close)"); f&&f.focus(); }
+function closeDrawer(){ $("#drawer").hidden=true; $("#scrim").hidden=true; S.editing=null; }
+function opt(map,cur){return Object.entries(map).map(([v,l])=>`<option value="${esc(v)}"${v===(cur||"")?" selected":""}>${esc(l)}</option>`).join("");}
+
+function editRecord(id){
+  const x=id?rows().find(r=>r.id===id):{nop:"",nama:"",alamat:"",rt:"",penyebab:"belum_diketahui",tahap:0,status:"belum",hasil:"",pic:"",kendala:"",catatan:"",kepuasan:""};
+  if(!x) return; S.editing={id:id||null,demo:!!x.demo,tahap:x.tahap||0,status:x.status||"belum"};
+  const ro=S.readOnly||x.demo;
+  openDrawer(`<header><div><span class="eyebrow">${id?"SPPT kembali":"SPPT baru"}${x.demo?" · data contoh":""}</span><h2 id="drTitle" class="mono">${esc(x.nop||"Tambah SPPT")}</h2></div><button class="btn ghost close" type="button" data-close>Tutup</button></header>
+  <form class="body" id="recForm">
+    ${x.demo?`<p class="help" style="background:var(--kuning-soft);padding:8px 10px;border-radius:6px">Ini data contoh dan tidak bisa disimpan. Impor atau tambahkan SPPT asli untuk mulai mencatat.</p>`:""}
+    ${x.sumber?`<fieldset class="fieldset"><legend>Data SPPT · ${esc(x.sumber)}${x.no?` · No. ${x.no}`:""}</legend>
+      <dl class="info">${[["Lokasi",x.lokasi],["Alamat objek",x.alamat],["Blok &amp; No",x.blokNo],["RT objek",x.rt],["Alamat WP",x.alamatWp],["Luas tanah / bangunan",(x.luasTanah!=null?nf.format(x.luasTanah)+" m²":"–")+" / "+(x.luasBangunan!=null?nf.format(x.luasBangunan)+" m²":"–")],["NIB",x.nib],["Keterangan awal",x.ketAwal]].filter(r=>r[1]).map(([k,v])=>`<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl></fieldset>`:""}
+    <div class="grid2">
+      <div class="field"><label for="iNop">NOP</label><input id="iNop" class="mono" value="${esc(x.nop)}" placeholder="64.72.050.012.001-0123.0" ${id?"readonly":""}></div>
+      <div class="field"><label for="iRt">RT</label><input id="iRt" value="${esc(x.rt)}" placeholder="012"></div>
+    </div>
+    <div class="field"><label for="iNama">Nama Wajib Pajak</label><input id="iNama" value="${esc(x.nama)}"></div>
+    <div class="field"><label for="iAlamat">Alamat objek pajak</label><input id="iAlamat" value="${esc(x.alamat)}"></div>
+    <div class="field"><label for="iPenyebab">Penyebab SPPT kembali</label><select id="iPenyebab">${opt(PENYEBAB,x.penyebab)}</select></div>
+    <fieldset class="fieldset"><legend>Tahap siklus saat ini</legend><div class="tahappick" id="tahapPick">${TAHAP.map((t,i)=>`<button type="button" data-t="${i}" aria-pressed="${(x.tahap||0)===i}">${t}</button>`).join("")}</div></fieldset>
+    <fieldset class="fieldset"><legend>Status tindak lanjut</legend><div class="statuspick" id="statusPick">${STATUS_ORDER.map(s=>`<button type="button" class="${s}" data-s="${s}" aria-pressed="${(x.status||"belum")===s}">${STATUS[s].l}</button>`).join("")}</div></fieldset>
+    <div class="field"><label for="iHasil">Hasil penelusuran (status jelas)</label><select id="iHasil">${opt(HASIL,x.hasil)}</select></div>
+    <fieldset class="fieldset"><legend>Catatan untuk KPI</legend><div class="checks">
+      <label><input type="checkbox" id="cLayak" ${x.layakUlang?"checked":""}> Layak disampaikan ulang</label>
+      <label><input type="checkbox" id="cTersampai" ${x.tersampaikanUlang?"checked":""}> Sudah berhasil disampaikan ulang</label>
+      <label><input type="checkbox" id="cTemuan" ${x.temuanData?"checked":""}> Ada temuan perubahan data (alamat, kepemilikan, identitas, objek)</label>
+      <label><input type="checkbox" id="cDiproses" ${x.dataDiproses?"checked":""}> Perubahan data sudah diproses/diteruskan ke bidang</label>
+      <label><input type="checkbox" id="cPerluTL" ${x.perluTL?"checked":""}> Memerlukan tindak lanjut PIC/bidang</label>
+    </div></fieldset>
+    <div class="grid2">
+      <div class="field"><label for="iPic">PIC / unit</label><select id="iPic">${PIC_OPTS.map(p=>`<option value="${esc(p)}"${p===(x.pic||"")?" selected":""}>${p||"–"}</option>`).join("")}${x.pic&&!PIC_OPTS.includes(x.pic)?`<option selected>${esc(x.pic)}</option>`:""}</select></div>
+      <div class="field"><label for="iPuas">Survei kepuasan WP</label><select id="iPuas">${opt(KEPUASAN,x.kepuasan)}</select></div>
+    </div>
+    <div class="field"><label for="iKendala">Kendala / kebutuhan koordinasi</label><input id="iKendala" value="${esc(x.kendala)}" placeholder="mis. RT belum terbentuk setelah pemekaran"></div>
+    <div class="field"><label for="iCatatan">Catatan lapangan</label><textarea id="iCatatan">${esc(x.catatan)}</textarea></div>
+    ${id&&x.updatedAt?`<p class="meta">Terakhir diperbarui ${new Date(x.updatedAt).toLocaleString("id-ID",{dateStyle:"medium",timeStyle:"short"})}${x.updatedBy&&S.names[x.updatedBy]?" oleh "+esc(S.names[x.updatedBy]):""}</p>`:""}
+    <div id="delBox"></div>
+  </form>
+  <footer><div>${id&&!ro?`<button class="btn danger" type="button" id="btnDel">Hapus</button>`:""}</div><div class="actions"><button class="btn" type="button" data-close>Batal</button><button class="btn primary" type="submit" form="recForm" ${ro?"disabled":""}>Simpan</button></div></footer>`);
+  $("#tahapPick").addEventListener("click",e=>{const b=e.target.closest("[data-t]");if(!b)return;S.editing.tahap=+b.dataset.t;
+    $("#tahapPick").querySelectorAll("button").forEach(n=>n.setAttribute("aria-pressed",n===b));
+    if(S.editing.tahap>0&&S.editing.status==="belum"){S.editing.status="kuning";$("#statusPick").querySelectorAll("button").forEach(n=>n.setAttribute("aria-pressed",n.dataset.s==="kuning"));}});
+  $("#statusPick").addEventListener("click",e=>{const b=e.target.closest("[data-s]");if(!b)return;S.editing.status=b.dataset.s;$("#statusPick").querySelectorAll("button").forEach(n=>n.setAttribute("aria-pressed",n===b));});
+  $("#iHasil").addEventListener("change",e=>{const v=e.target.value;if(v==="tersampaikan"){$("#cLayak").checked=true;$("#cTersampai").checked=true;}
+    if(v==="perubahan_data"){$("#cTemuan").checked=true;$("#cPerluTL").checked=true;} if(v==="perlu_tindak_lanjut") $("#cPerluTL").checked=true;});
+  $("#cTersampai").addEventListener("change",e=>{if(e.target.checked)$("#cLayak").checked=true;});
+  $("#cDiproses").addEventListener("change",e=>{if(e.target.checked)$("#cTemuan").checked=true;});
+  $("#recForm").addEventListener("submit",saveRecord);
+  const del=$("#btnDel"); del&&del.addEventListener("click",()=>{$("#delBox").innerHTML=`<div class="confirm">Hapus SPPT ini dari register? <button class="btn danger" type="button" id="btnDelYes">Ya, hapus</button><button class="btn" type="button" id="btnDelNo">Batal</button></div>`;
+    $("#btnDelNo").onclick=()=>{$("#delBox").innerHTML=""}; $("#btnDelYes").onclick=async()=>{try{await S.db.collection("sppt").doc(id).delete();toast("SPPT dihapus");closeDrawer();}catch(err){writeFail(err)}};});
+}
+const docId=nop=>{const s=String(nop||"").trim().replace(/[^A-Za-z0-9_\-.~:@+]/g,"");return s&&s!=="."&&s!==".."?s.slice(0,180):null;};
+async function saveRecord(e){
+  e.preventDefault(); if(!S.db||S.readOnly||!S.editing||S.editing.demo) return;
+  const v=id=>$(id).value.trim(), ch=id=>$(id).checked;
+  const nop=v("#iNop");
+  const body={nop,nama:v("#iNama"),alamat:v("#iAlamat"),rt:v("#iRt").padStart(v("#iRt")&&/^\d+$/.test(v("#iRt"))?3:0,"0"),penyebab:v("#iPenyebab"),
+    tahap:S.editing.tahap,status:S.editing.status,hasil:$("#iHasil").value,layakUlang:ch("#cLayak"),tersampaikanUlang:ch("#cTersampai"),
+    temuanData:ch("#cTemuan"),dataDiproses:ch("#cDiproses"),perluTL:ch("#cPerluTL"),pic:$("#iPic").value,kepuasan:$("#iPuas").value,
+    kendala:v("#iKendala"),catatan:v("#iCatatan"),updatedAt:new Date().toISOString(),updatedBy:S.myId||null};
+  let id=S.editing.id;
+  if(!id){ if(!nop){toast("Isi NOP terlebih dahulu");return;} id=docId(nop); if(!id){toast("NOP berisi karakter yang tidak dikenali");return;}
+    if(S.records.has(id)){toast("NOP ini sudah ada di register");return;} }
+  const btn=$('#drawer [type=submit]'); btn.disabled=true;
+  const prev=S.editing.id?S.records.get(S.editing.id):null;
+  const keep=prev?Object.fromEntries(["no","lokasi","alamatWp","blokNo","nib","luasTanah","luasBangunan","ketAwal","sumber","importedAt"].filter(k=>prev[k]!==undefined).map(k=>[k,prev[k]])):{};
+  try{ await S.db.collection("sppt").doc(id).set({...keep,...body}); toast("Tersimpan"); closeDrawer(); }catch(err){ btn.disabled=false; writeFail(err); }
+}
+function writeFail(err){
+  const code=err&&err.code;
+  if(code==="not_allowed"){toast("Akun Anda tidak berhak melakukan perubahan ini. Hubungi admin.");return;}
+  if(code==="invalid_argument"&&S.canWrite===null){S.readOnly=true;render();toast("Akun Anda hanya bisa melihat dashboard ini.");return;}
+  if(code==="quota_exceeded"){toast("Data terlalu besar untuk disimpan sekaligus.");return;}
+  if(code==="resource_exhausted"){toast("Terlalu banyak perubahan sekaligus. Tunggu sebentar lalu coba lagi.");return;}
+  toast("Gagal menyimpan. Periksa koneksi lalu coba lagi.");
+}
+
+/* ---------- impor ---------- */
+function openImport(){
+  openDrawer(`<header><div><span class="eyebrow">Register</span><h2 id="drTitle">Impor daftar SPPT kembali</h2></div><button class="btn ghost close" type="button" data-close>Tutup</button></header>
+  <div class="body">
+    <div class="excelbox">
+      <b>Impor dari file Excel</b>
+      <p class="help">Pilih file rekap SPPT kembali (format <i>Laporan Relap SPPT</i>, mis. <i>Rekap SPPT Kembali Sempaja Selatan.xlsx</i>). File dibaca di perangkat ini; hanya baris SPPT yang disimpan ke database.</p>
+      <div class="field"><label for="xFile">File Excel (.xlsx)</label><input id="xFile" type="file" accept=".xlsx,.xls"></div>
+      <div id="xOpts" hidden style="display:flex;flex-direction:column;gap:10px">
+        <div class="field"><label for="xReg">Sheet SPPT yang ditindaklanjuti (objek di Sempaja Barat)</label><select id="xReg"></select></div>
+        <div class="field"><label for="xRek">Sheet rekap induk (seluruh SPPT kembali Sempaja Selatan)</label><select id="xRek"></select></div>
+        <div class="checks"><label><input type="checkbox" id="xPilot" checked> Jadikan jumlah SPPT di sheet pertama sebagai target pilot</label></div>
+        <p class="help" id="xPreview"></p>
+        <button class="btn primary" type="button" id="xGo" disabled>Impor dari Excel</button>
+      </div>
+    </div>
+    <div class="divider">atau tempel manual</div>
+    <p class="help">Salin kolom dari Excel lalu tempel di bawah, satu SPPT per baris. Urutan kolom: <code>NOP</code> <code>Nama WP</code> <code>Alamat</code> <code>RT</code> dan opsional <code>Penyebab</code>. Pemisah boleh tab, titik koma, atau koma. Baris judul akan dilewati otomatis.</p>
+    <p class="help">Penyebab dikenali dari kata kunci: <i>alamat, pemekaran, pindah, kepemilikan/jual, objek</i>. NOP yang sudah ada di register akan diperbarui (nama, alamat, RT), tanpa mengubah status dan catatannya.</p>
+    <div class="field"><label for="iPaste">Data SPPT</label><textarea id="iPaste" class="mono" style="min-height:220px;font-size:12px" placeholder="64.72.050.012.001-0123.0&#9;Nama Wajib Pajak&#9;Jl. P. M. Noor No. 12&#9;012&#9;pemekaran"></textarea></div>
+    <p class="help" id="impPreview"></p>
+  </div>
+  <footer><span></span><div class="actions"><button class="btn" type="button" data-close>Batal</button><button class="btn primary" type="button" id="btnDoImport" disabled>Impor</button></div></footer>`);
+  setupExcelImport();
+  const ta=$("#iPaste"),pv=$("#impPreview"),go=$("#btnDoImport");let parsed=[];
+  ta.addEventListener("input",()=>{parsed=parseImport(ta.value);const bad=parsed.filter(p=>!p.id).length;const upd=parsed.filter(p=>p.id&&S.records.has(p.id)).length;
+    pv.textContent=parsed.length?`${parsed.length-bad} baris siap diimpor (${parsed.length-bad-upd} baru, ${upd} diperbarui)${bad?`, ${bad} baris dilewati karena NOP kosong/tidak valid`:""}.`:"";go.disabled=!(parsed.length-bad)||S.readOnly;});
+  go.addEventListener("click",async()=>{const ok=parsed.filter(p=>p.id);go.disabled=true;let done=0,fail=0;
+    for(let i=0;i<ok.length;i+=5){await Promise.all(ok.slice(i,i+5).map(async p=>{const ref=S.db.collection("sppt").doc(p.id);const ex=S.records.get(p.id);
+      try{ if(ex) await ref.update({nama:p.nama||ex.nama,alamat:p.alamat||ex.alamat,rt:p.rt||ex.rt,...(p.penyebab?{penyebab:p.penyebab}:{})});
+        else await ref.set({nop:p.nop,nama:p.nama,alamat:p.alamat,rt:p.rt,penyebab:p.penyebab||"belum_diketahui",tahap:0,status:"belum",hasil:"",layakUlang:false,tersampaikanUlang:false,temuanData:false,dataDiproses:false,perluTL:false,pic:"",kepuasan:"",kendala:"",catatan:"",updatedAt:new Date().toISOString(),updatedBy:S.myId||null});
+        done++; }catch(err){fail++; if(err&&(err.code==="quota_exceeded"||err.code==="invalid_argument")) throw err;}}))
+      .catch(err=>{writeFail(err);i=ok.length;});
+      pv.textContent=`Mengimpor… ${done} dari ${ok.length}`;}
+    toast(`${done} SPPT diimpor${fail?`, ${fail} gagal`:""}`); if(done) closeDrawer(); else go.disabled=false;});
+}
+
+function setupExcelImport(){
+  let sheets=[];const X=window.SAPA_EXCEL, fileIn=$("#xFile"), reg=$("#xReg"), rek=$("#xRek"), pv=$("#xPreview"), go=$("#xGo");
+  const isAdmin=window.SAPA&&window.SAPA.state.peran==="admin";
+  if(!isAdmin){rek.disabled=true;$("#xPilot").checked=false;$("#xPilot").disabled=true;}
+  const preview=()=>{const r=sheets[reg.value], k=sheets[rek.value];
+    if(!r){pv.textContent="";go.disabled=true;return;}
+    const recs=X.parseRegister(r), rk=k?X.parseRekap(k):null, baru=recs.filter(x=>!S.records.has(x.id)).length;
+    const lok=new Set(recs.map(x=>x.sheet.lokasi).filter(Boolean)).size;
+    pv.textContent=`${nf.format(recs.length)} SPPT dari sheet "${r.name}" (${nf.format(baru)} baru, ${nf.format(recs.length-baru)} diperbarui; ${recs.filter(x=>x.tersampaikan).length} sudah tersampaikan; ${lok} lokasi).`
+      +(rk?` Rekap induk "${k.name}": ${nf.format(rk.totalKembali)} SPPT kembali di ${Object.keys(rk.perBlok).length} blok.`:"")
+      +(!isAdmin?" Rekap induk dan target pilot hanya bisa diubah admin.":"");
+    go.disabled=!recs.length||S.readOnly;};
+  fileIn.addEventListener("change",async()=>{const f=fileIn.files[0];if(!f)return;pv.textContent="Membaca file…";$("#xOpts").hidden=false;
+    try{sheets=await X.readWorkbook(f);}catch(e){pv.textContent="File tidak bisa dibaca: "+(e.message||e);return;}
+    const withNop=sheets.map((s,i)=>({s,i})).filter(o=>o.s.nopCount>0);
+    if(!withNop.length){pv.textContent="Tidak ditemukan baris NOP (64.72…) di file ini.";return;}
+    const opt=o=>`<option value="${o.i}">${esc(o.s.name)} (${nf.format(o.s.nopCount)} NOP)</option>`;
+    reg.innerHTML=withNop.map(opt).join(""); rek.innerHTML=`<option value="">— tidak diperbarui —</option>`+withNop.map(opt).join("");
+    const r=withNop.find(o=>/barat/i.test(o.s.name)&&/sortir|sppt/i.test(o.s.name))||withNop[0]; reg.value=String(r.i);
+    const k=withNop.find(o=>/^rekap/i.test(o.s.name)); rek.value=k&&isAdmin?String(k.i):"";
+    preview();});
+  reg.addEventListener("change",preview); rek.addEventListener("change",preview);
+  go.addEventListener("click",async()=>{go.disabled=true;const r=sheets[reg.value], k=sheets[rek.value];
+    const recs=X.parseRegister(r); const now=new Date().toISOString();
+    const rowsOut=recs.map(x=>{const ex=S.records.get(x.id);
+      const data=ex?{...ex,...x.sheet}:{...x.sheet,penyebab:x.penyebab,tahap:x.tersampaikan?7:0,status:x.tersampaikan?"hijau":"belum",hasil:x.tersampaikan?"tersampaikan":"",
+        layakUlang:x.tersampaikan,tersampaikanUlang:x.tersampaikan,temuanData:false,dataDiproses:false,perluTL:false,pic:"",kepuasan:"",kendala:"",
+        catatan:/tunggakan/i.test(x.sheet.ketAwal)?"Tidak ada tunggakan (keterangan awal).":"",importedAt:now};
+      data.updatedAt=now; delete data.id; return {id:x.id,data};});
+    window.SAPA.state.onProgress=(d,t)=>{pv.textContent=`Menyimpan… ${nf.format(d)} dari ${nf.format(t)} SPPT`;};
+    try{
+      await window.SAPA.bulkUpsert(rowsOut);
+      if(k&&isAdmin){const rk=X.parseRekap(k);await S.db.doc("config/rekap").set({...(S.rekap||{}),...rk,sumber:k.name});}
+      if($("#xPilot").checked&&isAdmin)await S.db.doc("config/pilot").set({...S.cfg,target:recs.length});
+      toast(`${nf.format(rowsOut.length)} SPPT diimpor`);closeDrawer();
+    }catch(err){writeFail(err);go.disabled=false;}
+    finally{window.SAPA.state.onProgress=null;}});
+}
+function guessPenyebab(s){s=(s||"").toLowerCase();if(!s)return"";if(s.includes("mekar"))return"pemekaran";if(s.includes("pindah"))return"wp_pindah";if(s.includes("milik")||s.includes("jual")||s.includes("waris"))return"kepemilikan";if(s.includes("objek")||s.includes("bangun"))return"objek_berubah";if(s.includes("alamat"))return"alamat_tidak_jelas";return"lainnya";}
+function parseImport(text){
+  return text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(line=>{const sep=line.includes("\t")?"\t":line.includes(";")?";":",";const c=line.split(sep).map(s=>s.trim().replace(/^"|"$/g,""));
+    if(/^nop$/i.test(c[0])||/nomor objek/i.test(c[0])) return null;
+    const rt=(c[3]||"").replace(/^rt\.?\s*/i,"");return {nop:c[0],id:docId(c[0]),nama:c[1]||"",alamat:c[2]||"",rt:/^\d+$/.test(rt)?rt.padStart(3,"0"):rt,penyebab:guessPenyebab(c[4])};}).filter(Boolean);
+}
+
+/* ---------- pengaturan & ekspor ---------- */
+function openSettings(){
+  const c=S.cfg; const ro=S.readOnly||!S.db;
+  openDrawer(`<header><div><span class="eyebrow">Pilot</span><h2 id="drTitle">Atur pilot SAPA PAJAK</h2></div><button class="btn ghost close" type="button" data-close>Tutup</button></header>
+  <form class="body" id="cfgForm">
+    <div class="field"><label for="sKel">Kelurahan lokus pilot</label><input id="sKel" value="${esc(c.kelurahan)}"></div>
+    <div class="grid2"><div class="field"><label for="sTarget">Jumlah SPPT sasaran</label><input id="sTarget" type="number" min="1" value="${esc(c.target)}"></div>
+    <div class="field"><label for="sHari">Lama implementasi (hari)</label><input id="sHari" type="number" min="1" value="${esc(c.hari)}"></div></div>
+    <div class="field"><label for="sMulai">Tanggal mulai</label><input id="sMulai" type="date" value="${esc(c.mulai)}"></div>
+    <p class="help">Angka sasaran menjadi penyebut KPI 1 dan 2. Dalam rancangan: 400 dari 1.432 SPPT terverifikasi belum tersampaikan (27,9%), dikerjakan 12 petugas lapangan.</p>
+  </form>
+  <footer><span></span><div class="actions"><button class="btn" type="button" data-close>Batal</button><button class="btn primary" type="submit" form="cfgForm" ${ro?"disabled":""}>Simpan</button></div></footer>`);
+  $("#cfgForm").addEventListener("submit",async e=>{e.preventDefault();const body={kelurahan:$("#sKel").value.trim()||DEFAULT_CFG.kelurahan,target:Math.max(1,parseInt($("#sTarget").value,10)||400),hari:Math.max(1,parseInt($("#sHari").value,10)||60),mulai:$("#sMulai").value||DEFAULT_CFG.mulai};
+    try{await S.db.doc("config/pilot").set(body);toast("Pengaturan disimpan");closeDrawer();}catch(err){writeFail(err)}});
+}
+function csvCell(v){v=v==null?"":String(v);return /[";\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+async function exportCsv(){
+  const list=filtered(rows());
+  const head=["No","Lokasi","NOP","Nama WP","Alamat objek","Blok & No","RT objek","Alamat WP","L. Tanah","L. Bangunan","NIB","Keterangan awal","Penyebab","Tahap","Status","Hasil","Layak ulang","Tersampaikan ulang","Temuan data","Data diproses","Perlu TL","PIC","Kepuasan","Kendala","Catatan","Diperbarui"];
+  const yn=b=>b?"Ya":"Tidak";
+  const lines=[head.join(";"),...list.map(x=>[x.no,x.lokasi,x.nop,x.nama,x.alamat,x.blokNo,x.rt,x.alamatWp,x.luasTanah,x.luasBangunan,x.nib,x.ketAwal,PENYEBAB[x.penyebab]||"",TAHAP[x.tahap||0],STATUS[x.status||"belum"].l,HASIL[x.hasil||""],yn(x.layakUlang),yn(x.tersampaikanUlang),yn(x.temuanData),yn(x.dataDiproses),yn(x.perluTL),x.pic,KEPUASAN[x.kepuasan||""],x.kendala,x.catatan,x.updatedAt].map(csvCell).join(";"))];
+  const data="﻿"+lines.join("\r\n"); const name=`register-sapa-pajak-${new Date().toISOString().slice(0,10)}${isDemo()?"-contoh":""}.csv`;
+  if(S.downloads){try{await S.downloads.save({filename:name,data});toast("File CSV disiapkan");}catch(err){if(err&&err.code!=="declined")toast("Ekspor gagal. Coba lagi.");}return;}
+  toast("Ekspor tidak tersedia di tampilan ini.");
+}
+let tt;function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2800);}
+
+/* ---------- event ---------- */
+document.addEventListener("click",e=>{
+  const t=e.target;
+  if(t.closest("[data-close]")||t===$("#scrim")){closeDrawer();return;}
+  const act=t.closest("[data-act]"); if(act){ if(S.readOnly) return; if(!S.db){toast("Penyimpanan belum tersambung. Muat ulang halaman.");return;} act.dataset.act==="import"?openImport():editRecord(null); return; }
+  const op=t.closest("[data-open]"); if(op){editRecord(op.dataset.open);return;}
+  const st=t.closest("[data-status]"); if(st){S.filter.status=S.filter.status===st.dataset.status?"":st.dataset.status;S.limit=60;render();$("#register").scrollIntoView({behavior:"smooth",block:"start"});return;}
+  const th=t.closest("[data-tahap]"); if(th){S.filter.tahap=S.filter.tahap===th.dataset.tahap?"":th.dataset.tahap;S.limit=60;render();return;}
+  const gp=t.closest("[data-grp]"); if(gp){S.groupBy=gp.dataset.grp;render();return;}
+  const bk=t.closest("[data-blok]"); if(bk){S.filter.blok=bk.dataset.blok;S.limit=60;render();$("#register").scrollIntoView({behavior:"smooth",block:"start"});return;}
+  const lk=t.closest("[data-lokasi]"); if(lk){S.filter.lokasi=lk.dataset.lokasi;S.limit=60;render();$("#register").scrollIntoView({behavior:"smooth",block:"start"});return;}
+  const rt=t.closest("[data-rt]"); if(rt){S.filter.rt=rt.dataset.rt;S.limit=60;render();$("#register").scrollIntoView({behavior:"smooth",block:"start"});return;}
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#drawer").hidden)closeDrawer();if(e.key==="Enter"&&e.target.matches("tr[data-open]"))editRecord(e.target.dataset.open);});
+let qT;$("#fSearch").addEventListener("input",e=>{clearTimeout(qT);qT=setTimeout(()=>{S.filter.q=e.target.value;S.limit=60;renderTable(rows());},150);});
+[["#fStatus","status"],["#fTahap","tahap"],["#fRt","rt"],["#fPenyebab","penyebab"],["#fLokasi","lokasi"],["#fBlok","blok"]].forEach(([s,k])=>$(s).addEventListener("change",e=>{S.filter[k]=e.target.value;S.limit=60;render();}));
+$("#fSort").addEventListener("change",e=>{S.sort=e.target.value;S.limit=60;renderTable(rows());});
+$("#fReset").addEventListener("click",()=>{S.filter={q:"",status:"",tahap:"",rt:"",penyebab:"",lokasi:"",blok:""};$("#fSearch").value="";S.limit=60;render();});
+$("#btnMore").addEventListener("click",()=>{S.limit+=100;renderTable(rows());});
+$("#btnSetting").addEventListener("click",openSettings);
+$("#btnRekap").addEventListener("click",openRekap);
+$("#btnLogout").addEventListener("click",()=>window.SAPA.refresh().then(()=>toast("Data dimuat ulang dari spreadsheet")).catch(e=>toast(e.message||"Gagal memuat")));
+$("#btnRekap2").addEventListener("click",()=>{if(!S.db){toast("Penyimpanan belum tersambung. Muat ulang halaman.");return;}openRekap();});
+$("#btnExport").addEventListener("click",exportCsv);
+
+render();
+
+/* ---------- sambungan penyimpanan bersama ---------- */
+(async()=>{
+  const claude=window.claude; if(!claude||!claude.use){$("#connNotice").hidden=false;$("#connNotice").textContent="Penyimpanan bersama tidak tersedia di tampilan ini. Dashboard hanya menampilkan data contoh.";S.readOnly=true;render();return;}
+  const [db,user,downloads]=await Promise.all([claude.use("db"),claude.use("user"),claude.use("downloads")]);
+  S.db=db;S.user=user;S.downloads=downloads;
+  if(!db){$("#connNotice").hidden=false;$("#connNotice").textContent="Penyimpanan bersama tidak tersedia untuk akun ini. Dashboard hanya menampilkan data contoh.";S.readOnly=true;render();return;}
+  const st=window.SAPA.state, PERAN={admin:"Admin",petugas:"Petugas",pemantau:"Pemantau (lihat saja)"};
+  $("#whoami").innerHTML=`<b>${esc(st.nama)}</b> · ${PERAN[st.peran]||st.peran}`;
+  if(st.peran!=="admin"){$("#btnRekap").hidden=true;$("#btnSetting").hidden=true;}
+  if(user){try{S.myId=await user.id();}catch(_){} try{S.canWrite=await user.can("data.write");}catch(_){S.canWrite=null;} if(S.canWrite===false)S.readOnly=true;}
+  db.doc("config/rekap").onSnapshot(s=>{S.rekap=s.exists?{...DEFAULT_REKAP,...s.data()}:null;render();},()=>{});
+  db.doc("config/pilot").onSnapshot(s=>{S.cfg=s.exists?{...DEFAULT_CFG,...s.data()}:{...DEFAULT_CFG};render();},()=>{});
+  db.collection("sppt").onSnapshot(snap=>{const m=new Map();for(const d of snap.docs)m.set(d.id,{id:d.id,...d.data()});S.records=m;render();},
+    err=>{$("#connNotice").hidden=false;$("#connNotice").textContent="Sambungan data terputus. Muat ulang halaman untuk menyambung kembali.";});
+  if(S.readOnly){$("#connNotice").hidden=false;$("#connNotice").textContent="Akun Anda berperan pemantau: dashboard bisa dilihat, tetapi tidak bisa diubah.";}
+  render();
+})();
+})();
+</script>

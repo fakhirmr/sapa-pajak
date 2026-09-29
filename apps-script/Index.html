@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<?!= include('Styles') ?>
+</head>
+<body>
+<div class="wrap" id="app">
+  <header class="head">
+    <div class="brand">
+      <span class="eyebrow">UPTD Pendapatan Daerah Wilayah III · Bapenda Kota Samarinda</span>
+      <h1>Dashboard Kendali <span>SAPA PAJAK</span></h1>
+      <p><b>SPPT PBB-P2 kembali Kel. Sempaja Selatan yang objeknya berada di Kel. Sempaja Barat</b> · dampak pemekaran wilayah (Perda Kota Samarinda No. 6 Tahun 2014)</p>
+    </div>
+    <div class="metabox">
+      <div class="mb"><span class="eyebrow" id="mTanggalLbl">Data per tanggal</span><b id="mTanggal">–</b></div>
+      <div class="mb"><span class="eyebrow">Periode</span><b id="mPeriode">–</b></div>
+      <div class="mb" style="min-width:170px"><span class="eyebrow">Durasi implementasi</span><b id="mDurasi">60 Hari</b><div class="dur"><i id="mDurBar" style="width:0"></i></div><small id="mHari">–</small></div>
+      <div class="mb"><span class="eyebrow">Lokus pilot</span><b id="pKel">Kel. Sempaja Barat</b><small id="pTarget">400 SPPT sasaran</small></div>
+      <div class="headbtns"><div class="who" id="whoami"></div><button class="btn" id="btnRekap" type="button">Tanggal &amp; periode</button><button class="btn ghost" id="btnSetting" type="button">Atur pilot</button><div style="display:flex;gap:10px;justify-content:flex-end"><a class="linkbtn" id="linkPublik" href="#" target="_blank" rel="noopener" hidden>Halaman publik</a><button class="linkbtn" type="button" id="btnLogout">Muat ulang data</button></div></div>
+    </div>
+  </header>
+
+  <div class="banner" id="demoBanner" hidden>
+    <p><b>Data contoh.</b> Register masih kosong, jadi dashboard menampilkan data ilustratif agar terlihat cara kerjanya. Data ini tidak disimpan dan hilang begitu SPPT asli pertama dimasukkan.</p>
+    <div class="actions">
+      <button class="btn primary" type="button" data-act="import">Impor daftar SPPT</button>
+      <button class="btn" type="button" data-act="add">Tambah satu SPPT</button>
+    </div>
+  </div>
+  <p class="notice" id="connNotice" hidden></p>
+
+  <section aria-label="Ringkasan SPPT PBB-P2" style="display:flex;flex-direction:column;gap:12px">
+    <div class="banner" id="rekapDemo" hidden>
+      <p><b>Angka contoh.</b> Ringkasan di bawah masih memakai angka ilustrasi, bukan data resmi. Isi jumlah SPPT kembali dari rekap induk agar perbandingan memakai data sebenarnya.</p>
+      <div class="actions"><button class="btn primary" type="button" id="btnRekap2">Isi rekap induk</button></div>
+    </div>
+    <div class="tiles" id="tiles"></div>
+    <p class="warnline" id="rekapWarn" hidden></p>
+    <div class="trio">
+      <article class="card"><h2>Komposisi SPPT Kembali Kel. Sempaja Selatan</h2><div class="cb" id="donutBox"></div></article>
+      <article class="card"><h2>Perbandingan per Blok NOP</h2><div class="cb" id="kecBox"></div></article>
+      <article class="card"><h2>Status Tindak Lanjut (Objek di Sempaja Barat)</h2><div class="cb" id="tlBox"></div></article>
+    </div>
+  </section>
+
+  <section aria-label="Siklus SAPA PAJAK">
+    <div class="siklus" id="siklus"></div>
+  </section>
+
+  <section aria-label="Indikator kinerja">
+    <div class="kpis" id="kpis"></div>
+  </section>
+
+  <section class="panels">
+    <article class="panel">
+      <header><h2>Kondisi Wilayah</h2><span class="tag">PANEL A</span></header>
+      <div class="stats" id="panelAStats"></div>
+      <div>
+        <div class="row" style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px"><h3 id="grpTitle">Sebaran per RT</h3><div class="statuspick" id="grpPick"><button type="button" data-grp="lokasi">Lokasi</button><button type="button" data-grp="rt">RT</button></div></div>
+        <span class="muted">Diurutkan dari yang belum jelas terbanyak. Klik baris untuk menyaring register.</span>
+        <div class="legend"><span><i style="background:var(--hijau)"></i>Selesai</span><span><i style="background:var(--kuning)"></i>Proses</span><span><i style="background:var(--merah)"></i>Perlu TL</span><span><i style="background:var(--abu)"></i>Belum disapa</span></div>
+      </div>
+      <div class="rtlist" id="rtList"></div>
+    </article>
+
+    <article class="panel">
+      <header><h2>Status Tindak Lanjut</h2><span class="tag">PANEL B</span></header>
+      <div class="stack" id="statusStack" aria-hidden="true"></div>
+      <div class="statusbig" id="statusBig"></div>
+      <p class="muted" style="margin:0">Klik salah satu status untuk menyaring register di bawah.</p>
+    </article>
+
+    <article class="panel">
+      <header><h2>Perhatian Kepala UPTD</h2><span class="tag">PANEL C</span></header>
+      <div class="attn" id="attn"></div>
+    </article>
+  </section>
+
+  <section class="register" id="register" aria-label="Register tindak lanjut">
+    <div class="reg-head">
+      <div>
+        <h2>Register Tindak Lanjut</h2>
+        <span class="muted" id="regCount"></span> <span class="muted" id="lastSync"></span>
+      </div>
+      <div class="actions">
+        <button class="btn primary" type="button" data-act="add">+ Tambah SPPT</button>
+        <button class="btn" type="button" data-act="import">Impor</button>
+        <button class="btn" type="button" id="btnExport">Ekspor CSV</button>
+      </div>
+    </div>
+    <div class="reg-head" style="border-bottom:1px solid var(--line)">
+      <div class="filters">
+        <input type="search" id="fSearch" placeholder="Cari NOP, nama WP, alamat, blok…" aria-label="Cari">
+        <select id="fStatus" aria-label="Filter status"></select>
+        <select id="fTahap" aria-label="Filter tahap"></select>
+        <select id="fLokasi" aria-label="Filter lokasi"></select>
+        <select id="fBlok" aria-label="Filter blok NOP"></select>
+        <select id="fRt" aria-label="Filter RT"></select>
+        <select id="fPenyebab" aria-label="Filter penyebab"></select>
+        <select id="fSort" aria-label="Urutan"><option value="no">Urut: No. sheet</option><option value="baru">Urut: terakhir diperbarui</option></select>
+        <button class="btn ghost" type="button" id="fReset">Hapus filter</button>
+      </div>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>NOP / Wajib Pajak</th><th>Alamat objek · RT</th><th>Alamat WP</th><th>Penyebab kembali</th><th>Tahap</th><th>Hasil</th><th>Status</th><th>PIC</th><th>Diperbarui</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="regEmpty" hidden>Tidak ada SPPT yang cocok dengan filter.</div>
+    <div class="reg-foot"><span id="regShow"></span><div class="actions"><button class="btn" type="button" id="btnMore" hidden>Tampilkan lebih banyak</button></div></div>
+  </section>
+
+  <p class="muted" style="margin:0">Dashboard ini adalah alat rekap dan pengendalian, bukan aplikasi perpajakan. Data wajib pajak bersifat rahasia; jangan membagikan akun atau hasil ekspor di luar tim. Perubahan data resmi tetap diproses melalui sistem dan bidang berwenang di Bapenda.</p>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" hidden aria-modal="true" role="dialog" aria-labelledby="drTitle"></aside>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<?!= include('Bridge') ?>
+<?!= include('App') ?>
+</body>
+</html>

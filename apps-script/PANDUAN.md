@@ -77,24 +77,21 @@ Setelah mengubah kode, pilih **Deploy → Manage deployments**, klik ikon pensil
 - Setiap simpan butuh sekitar 1–3 detik, karena Apps Script menulis ke spreadsheet.
 - Cocok untuk ratusan sampai beberapa ribu SPPT dan tim kecil. Untuk puluhan ribu baris atau banyak pengguna bersamaan, versi Supabase lebih tepat.
 
-## Sinkron otomatis dari GitHub (opsional)
+## Memperbarui kode dengan SAPA Updater
 
-Dengan pengaturan ini, perubahan kode cukup di-push ke repo GitHub. GitHub Actions ([`.github/workflows/apps-script.yml`](../.github/workflows/apps-script.yml)) lalu mengirimnya ke project Apps Script dan memperbarui kedua web app. URL-nya tetap sama.
+Kode di folder `apps-script/` pada repo GitHub `fakhirmr/sapa-pajak` adalah versi resmi. Script kecil **SAPA Updater** (folder [`updater/`](../updater/)) mengambil kode itu dan memasangnya ke project Apps Script SAPA PAJAK, termasuk memperbarui kedua web app ke versi baru. URL-nya tetap sama.
 
-Lakukan sekali saja:
+### Pasang sekali
 
-1. **Aktifkan Apps Script API** di https://script.google.com/home/usersettings (ubah menjadi *On*).
-2. **Ambil tiga ID dari editor Apps Script:**
-   - ⚙️ **Project Settings → Script ID**
-   - **Deploy → Manage deployments**: salin **Deployment ID** web app petugas dan web app publik.
-3. **Buat kredensial clasp** di laptop (perlu Node.js):
-   ```
-   npx @google/clasp@2.4.2 login
-   ```
-   Login dengan akun Google pemilik spreadsheet. Setelah berhasil, buka file `.clasprc.json` di folder home (Windows: `C:\Users\NAMA\.clasprc.json`) dan salin seluruh isinya.
-4. **Simpan di GitHub** melalui repo → **Settings → Secrets and variables → Actions**:
-   - tab **Secrets**, isi `CLASPRC_JSON` dengan isi file dari langkah 3
-   - tab **Variables**, isi `DEPLOY_ID_PETUGAS` dan `DEPLOY_ID_PUBLIK` (Script ID sudah tersimpan di `.clasp.json`)
-5. Buka tab **Actions**, pilih **Apps Script**, lalu klik **Run workflow** untuk uji pertama. Kalau berhasil (centang hijau), setiap push berikutnya ke `main` akan otomatis terkirim.
+1. Repo GitHub `sapa-pajak` harus **Public**: Settings → *Danger Zone* → **Change visibility → Public**. Repo hanya berisi kode, tanpa data wajib pajak.
+2. **Apps Script API** harus *On* di https://script.google.com/home/usersettings.
+3. Buka https://script.google.com → **New project**, lalu beri nama `SAPA Updater`.
+4. Ganti isi `Code.gs` dengan isi [`updater/Updater.gs`](../updater/Updater.gs).
+5. Klik ⚙️ **Project Settings**, lalu centang **Show "appsscript.json" manifest file in editor**. Kembali ke **Editor**, buka `appsscript.json`, dan ganti isinya dengan [`updater/appsscript.json`](../updater/appsscript.json).
+6. Klik **Simpan**, pilih fungsi `perbarui`, lalu klik **Run**. Saat diminta izin: **Review permissions → pilih akun → Advanced → Go to SAPA Updater (unsafe) → Allow**.
 
-Isi `CLASPRC_JSON` memberi akses ke Apps Script akun Anda. Simpan hanya sebagai *secret*, jangan pernah di dalam file repo atau chat.
+### Setiap ada perubahan kode
+
+Buka project **SAPA Updater**, pilih `perbarui`, lalu klik **Run**. *Execution log* akan menampilkan versi yang dipasang ke tiap web app.
+
+Akun yang menjalankan updater harus akun pemilik (atau editor) project Apps Script SAPA PAJAK.

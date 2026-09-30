@@ -1,5 +1,7 @@
 # Dashboard Kendali SAPA PAJAK
 
+> Ada dua versi di repo ini: **website** (folder akar: Supabase + Vercel) dan **Google Apps Script** (folder [`apps-script/`](apps-script/PANDUAN.md): Google Spreadsheet sebagai database, tanpa server).
+
 Website pemantauan SPPT PBB-P2 kembali di **Kel. Sempaja Selatan** yang objeknya ternyata berada di **Kel. Sempaja Barat** akibat pemekaran wilayah (Perda Kota Samarinda No. 6 Tahun 2014). Website ini disusun untuk Aksi Perubahan SAPA PAJAK di UPTD Pendapatan Daerah Wilayah III, Bapenda Kota Samarinda.
 
 | Halaman | Alamat | Isi | Akses |
@@ -9,7 +11,7 @@ Website pemantauan SPPT PBB-P2 kembali di **Kel. Sempaja Selatan** yang objeknya
 
 Data disimpan di project Supabase **pbb** (tabel berawalan `sapa_`). Website di-hosting di Vercel sebagai situs statis.
 
-> **Data wajib pajak tidak disimpan di repo ini.** Repo ini publik. Data diimpor langsung dari file Excel lewat website ke database Supabase.
+> **Data wajib pajak tidak disimpan di repo ini.** Data diimpor langsung dari file Excel lewat website ke database Supabase (atau disimpan di Google Spreadsheet untuk versi Apps Script). Tetap jadikan repo ini **privat**.
 
 ---
 
@@ -37,10 +39,9 @@ Anon key memang boleh terlihat publik. Yang melindungi data adalah aturan akses 
 
 ### 3. Pasang di Vercel
 
-1. Buka [vercel.com/new](https://vercel.com/new) dan impor repo **fakhirmr/wealthflow**.
-2. Di **Root Directory**, klik **Edit** lalu pilih folder **`sapa-pajak`**. Langkah ini penting agar tidak tercampur dengan aplikasi WealthFlow.
-3. Pilih **Framework Preset: Other**. Build Command dan Output Directory dibiarkan kosong.
-4. Pilih branch yang berisi folder `sapa-pajak`, lalu klik **Deploy**. Website akan tersedia di alamat seperti `https://sapa-pajak.vercel.app`. Nama project bisa diatur saat impor.
+1. Buka [vercel.com/new](https://vercel.com/new) dan impor repo **sapa-pajak**. Root Directory dibiarkan default (akar repo).
+2. Pilih **Framework Preset: Other**. Build Command dan Output Directory dibiarkan kosong.
+3. Pilih branch `main`, lalu klik **Deploy**. Website akan tersedia di alamat seperti `https://sapa-pajak.vercel.app`. Nama project bisa diatur saat impor.
 5. (Opsional) Tambahkan domain sendiri di **Settings → Domains**.
 
 ### 4. Atur alamat website di Supabase

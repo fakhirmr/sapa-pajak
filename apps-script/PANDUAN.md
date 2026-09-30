@@ -94,7 +94,7 @@ Lakukan sekali saja:
    Login dengan akun Google pemilik spreadsheet. Setelah berhasil, buka file `.clasprc.json` di folder home (Windows: `C:\Users\NAMA\.clasprc.json`) dan salin seluruh isinya.
 4. **Simpan di GitHub** melalui repo → **Settings → Secrets and variables → Actions**:
    - tab **Secrets**, isi `CLASPRC_JSON` dengan isi file dari langkah 3
-   - tab **Variables**, isi `SCRIPT_ID`, `DEPLOY_ID_PETUGAS`, dan `DEPLOY_ID_PUBLIK`
+   - tab **Variables**, isi `DEPLOY_ID_PETUGAS` dan `DEPLOY_ID_PUBLIK` (Script ID sudah tersimpan di `.clasp.json`)
 5. Buka tab **Actions**, pilih **Apps Script**, lalu klik **Run workflow** untuk uji pertama. Kalau berhasil (centang hijau), setiap push berikutnya ke `main` akan otomatis terkirim.
 
 Isi `CLASPRC_JSON` memberi akses ke Apps Script akun Anda. Simpan hanya sebagai *secret*, jangan pernah di dalam file repo atau chat.

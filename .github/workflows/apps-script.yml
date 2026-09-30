@@ -3,7 +3,7 @@
 #
 # Perlu diatur sekali di GitHub → Settings → Secrets and variables → Actions:
 #   Secret   CLASPRC_JSON       isi file ~/.clasprc.json setelah `npx @google/clasp@2.4.2 login`
-#   Variable SCRIPT_ID          Script ID project Apps Script (Project Settings → Script ID)
+#   (Script ID tersimpan di .clasp.json; variable SCRIPT_ID opsional untuk menimpanya)
 #   Variable DEPLOY_ID_PETUGAS  Deployment ID web app petugas   (Deploy → Manage deployments)
 #   Variable DEPLOY_ID_PUBLIK   Deployment ID web app publik
 name: Apps Script
@@ -32,9 +32,9 @@ jobs:
           SCRIPT_ID: ${{ vars.SCRIPT_ID }}
         run: |
           test -n "$CLASPRC_JSON" || { echo "::error::Secret CLASPRC_JSON belum diisi"; exit 1; }
-          test -n "$SCRIPT_ID" || { echo "::error::Variable SCRIPT_ID belum diisi"; exit 1; }
           printf '%s' "$CLASPRC_JSON" > ~/.clasprc.json
-          printf '{"scriptId":"%s","rootDir":"apps-script"}' "$SCRIPT_ID" > .clasp.json
+          if [ -n "$SCRIPT_ID" ]; then printf '{"scriptId":"%s","rootDir":"apps-script"}' "$SCRIPT_ID" > .clasp.json; fi
+          grep -q scriptId .clasp.json || { echo "::error::Script ID tidak ditemukan di .clasp.json"; exit 1; }
       - name: Perbarui deployment petugas (Execute as user accessing)
         if: vars.DEPLOY_ID_PETUGAS != ''
         run: |

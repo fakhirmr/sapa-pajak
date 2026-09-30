@@ -76,3 +76,25 @@ Setelah mengubah kode, pilih **Deploy → Manage deployments**, klik ikon pensil
 - Perubahan dari petugas lain muncul dalam **±1 menit**, tidak seketika. Bisa juga dengan menekan **Muat ulang data**.
 - Setiap simpan butuh sekitar 1–3 detik, karena Apps Script menulis ke spreadsheet.
 - Cocok untuk ratusan sampai beberapa ribu SPPT dan tim kecil. Untuk puluhan ribu baris atau banyak pengguna bersamaan, versi Supabase lebih tepat.
+
+## Sinkron otomatis dari GitHub (opsional)
+
+Dengan pengaturan ini, perubahan kode cukup di-push ke repo GitHub. GitHub Actions ([`.github/workflows/apps-script.yml`](../.github/workflows/apps-script.yml)) lalu mengirimnya ke project Apps Script dan memperbarui kedua web app. URL-nya tetap sama.
+
+Lakukan sekali saja:
+
+1. **Aktifkan Apps Script API** di https://script.google.com/home/usersettings (ubah menjadi *On*).
+2. **Ambil tiga ID dari editor Apps Script:**
+   - ⚙️ **Project Settings → Script ID**
+   - **Deploy → Manage deployments**: salin **Deployment ID** web app petugas dan web app publik.
+3. **Buat kredensial clasp** di laptop (perlu Node.js):
+   ```
+   npx @google/clasp@2.4.2 login
+   ```
+   Login dengan akun Google pemilik spreadsheet. Setelah berhasil, buka file `.clasprc.json` di folder home (Windows: `C:\Users\NAMA\.clasprc.json`) dan salin seluruh isinya.
+4. **Simpan di GitHub** melalui repo → **Settings → Secrets and variables → Actions**:
+   - tab **Secrets**, isi `CLASPRC_JSON` dengan isi file dari langkah 3
+   - tab **Variables**, isi `SCRIPT_ID`, `DEPLOY_ID_PETUGAS`, dan `DEPLOY_ID_PUBLIK`
+5. Buka tab **Actions**, pilih **Apps Script**, lalu klik **Run workflow** untuk uji pertama. Kalau berhasil (centang hijau), setiap push berikutnya ke `main` akan otomatis terkirim.
+
+Isi `CLASPRC_JSON` memberi akses ke Apps Script akun Anda. Simpan hanya sebagai *secret*, jangan pernah di dalam file repo atau chat.

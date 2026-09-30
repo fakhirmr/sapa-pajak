@@ -1,19 +1,19 @@
 /**
- * SAPA PAJAK — Dashboard Kendali SPPT PBB-P2 Kembali (versi Google Apps Script)
+ * SAPA PAJAK - Dashboard Kendali SPPT PBB-P2 Kembali (versi Google Apps Script)
  *
- * Database = Google Spreadsheet tempat script ini ditempel (Extensions → Apps Script).
+ * Database = Google Spreadsheet tempat script ini ditempel (Extensions -> Apps Script).
  *  - Sheet SHEET_REGISTER : daftar SPPT yang ditindaklanjuti (objek di Kel. Sempaja Barat). TIDAK diubah script.
  *  - Sheet SHEET_INDUK    : rekap induk seluruh SPPT kembali Kel. Sempaja Selatan. TIDAK diubah script.
  *  - Sheet SAPA_TindakLanjut : dibuat otomatis; satu baris per NOP berisi hasil kerja petugas.
  *  - Sheet SAPA_Pengaturan   : dibuat otomatis; tanggal data, periode, pilot, admin, alamat halaman publik.
  *
  * Hak akses mengikuti sharing spreadsheet (lihat PANDUAN.md):
- *  - Editor spreadsheet  → petugas (bisa memperbarui tindak lanjut)
- *  - Viewer spreadsheet  → pemantau (hanya melihat)
- *  - Pemilik / email di pengaturan "admin" → admin (bisa mengatur pilot & tanggal/periode)
+ *  - Editor spreadsheet  -> petugas (bisa memperbarui tindak lanjut)
+ *  - Viewer spreadsheet  -> pemantau (hanya melihat)
+ *  - Pemilik / email di pengaturan "admin" -> admin (bisa mengatur pilot & tanggal/periode)
  */
 
-// ─── Sesuaikan bila nama sheet berbeda ───
+// == Sesuaikan bila nama sheet berbeda ==
 var SHEET_REGISTER = 'SORTIR Sppt S. Barat';
 var SHEET_INDUK = 'Rekap SPPT Kembali S Selatan';
 var SHEET_TL = 'SAPA_TindakLanjut';
@@ -47,7 +47,7 @@ var CFG_DEFAULT = [
   ['admin', '', 'Email admin tambahan, pisahkan dengan koma'], ['publikUrl', '', 'Alamat deployment halaman publik (diisi setelah deploy)']
 ];
 
-// ═════════════════════════ Halaman ═════════════════════════
+// == Halaman ==
 function doGet(e) {
   var page = (e && e.parameter && e.parameter.page) || '';
   if (page === 'publik' || !isStaffContext_()) {
@@ -73,7 +73,7 @@ function cekRingkasan() {
     '\nSelesai: ' + (r.status.hijau || 0) + '\nBelum disapa: ' + (r.status.belum || 0));
 }
 
-// ═════════════════════════ Hak akses ═════════════════════════
+// == Hak akses ==
 /** Dashboard lengkap hanya dijalankan sebagai pengguna yang membukanya (deployment "User accessing"),
  *  atau oleh pemilik sendiri. Di deployment publik ("Me" + "Anyone"), pengunjung lain hanya mendapat ringkasan. */
 function isStaffContext_() {
@@ -94,7 +94,7 @@ function me_() {
   return { email: email, nama: email.split('@')[0], peran: admin ? 'admin' : canWrite ? 'petugas' : 'pemantau', canWrite: canWrite };
 }
 
-// ═════════════════════════ Pembacaan sheet sumber ═════════════════════════
+// == Pembacaan sheet sumber ==
 function cl_(v) { return v === null || v === undefined ? '' : String(v).replace(/\s+/g, ' ').trim(); }
 function isNop_(v) { return /^64\.72\./.test(cl_(v)); }
 function layout_(rows) {
@@ -153,7 +153,7 @@ function readInduk_() {
   return { totalKembali: total, perBlok: perBlok };
 }
 
-// ═════════════════════════ Sheet SAPA_* ═════════════════════════
+// == Sheet SAPA_* ==
 function ensureSheets_() {
   var ss = SpreadsheetApp.getActive();
   var tl = ss.getSheetByName(SHEET_TL);
@@ -247,7 +247,7 @@ function configOut_(cfg, reg) {
   };
 }
 
-// ═════════════════════════ Fungsi yang dipanggil halaman ═════════════════════════
+// == Fungsi yang dipanggil halaman ==
 function getData() {
   var me = me_(); ensureSheetsIfWriter_(me);
   var rows = mergedRows_(), cfg = readConfig_();
@@ -289,7 +289,7 @@ function getRingkasan() {
   rows.forEach(function (r) {
     var s = r.status || 'belum'; status[s] = (status[s] || 0) + 1;
     var b = (String(r.id).split('.')[4] || '').split('-')[0]; perBlok[b] = (perBlok[b] || 0) + 1;
-    var l = r.lokasi || '–'; lok[l] = lok[l] || { lokasi: l, n: 0, selesai: 0 }; lok[l].n++; if (s === 'hijau') lok[l].selesai++;
+    var l = r.lokasi || '-'; lok[l] = lok[l] || { lokasi: l, n: 0, selesai: 0 }; lok[l].n++; if (s === 'hijau') lok[l].selesai++;
   });
   var upd = rows.map(function (r) { return r.updatedAt; }).filter(String).sort().pop() || '';
   return {
@@ -299,3 +299,5 @@ function getRingkasan() {
     diperbarui: upd
   };
 }
+
+// ===== AKHIR FILE Code.gs (baris terakhir) =====

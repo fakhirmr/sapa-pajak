@@ -287,18 +287,18 @@ td .sub{display:block;color:var(--ink-3);font-size:12px}
 <div class="wrap">
   <header class="head">
     <div class="brand">
-      <span class="eyebrow">UPTD Pendapatan Daerah Wilayah III · Bapenda Kota Samarinda</span>
+      <span class="eyebrow">UPTD Pendapatan Daerah Wilayah III &#xb7; Bapenda Kota Samarinda</span>
       <h1>Ringkasan <span>SAPA PAJAK</span></h1>
-      <p><b>SPPT PBB-P2 kembali Kel. Sempaja Selatan yang objeknya berada di Kel. Sempaja Barat</b> · dampak pemekaran wilayah (Perda Kota Samarinda No. 6 Tahun 2014)</p>
+      <p><b>SPPT PBB-P2 kembali Kel. Sempaja Selatan yang objeknya berada di Kel. Sempaja Barat</b> &#xb7; dampak pemekaran wilayah (Perda Kota Samarinda No. 6 Tahun 2014)</p>
     </div>
     <div class="metabox">
-      <div class="mb"><span class="eyebrow">Data per tanggal</span><b id="mTanggal">–</b></div>
-      <div class="mb"><span class="eyebrow">Periode</span><b id="mPeriode">–</b></div>
-      <div class="mb"><span class="eyebrow">Diperbarui</span><b id="mUpd">–</b></div>
+      <div class="mb"><span class="eyebrow">Data per tanggal</span><b id="mTanggal">&#x2013;</b></div>
+      <div class="mb"><span class="eyebrow">Periode</span><b id="mPeriode">&#x2013;</b></div>
+      <div class="mb"><span class="eyebrow">Diperbarui</span><b id="mUpd">&#x2013;</b></div>
       
     </div>
   </header>
-  <p class="notice" id="state">Memuat ringkasan…</p>
+  <p class="notice" id="state">Memuat ringkasan&#x2026;</p>
   <section style="display:flex;flex-direction:column;gap:12px" aria-label="Ringkasan">
     <div class="tiles" id="tiles"></div>
     <div class="trio">
@@ -315,8 +315,8 @@ td .sub{display:block;color:var(--ink-3);font-size:12px}
   "use strict";
   const $=s=>document.querySelector(s), nf=new Intl.NumberFormat("id-ID");
   const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-  const pct=(v,d=2)=>v==null||!isFinite(v)?"–":v.toLocaleString("id-ID",{minimumFractionDigits:d,maximumFractionDigits:d})+"%";
-  const tgl=v=>v?new Date(String(v).length<=10?v+"T00:00:00":v).toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"}):"–";
+  const pct=(v,d=2)=>v==null||!isFinite(v)?"\u2013":v.toLocaleString("id-ID",{minimumFractionDigits:d,maximumFractionDigits:d})+"%";
+  const tgl=v=>v?new Date(String(v).length<=10?v+"T00:00:00":v).toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"}):"\u2013";
   const ICON={doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h8M9 17h8"/></svg>',
     send:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></svg>',
     x:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="11"/><path d="m8 8 8 8M16 8l-8 8" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>',
@@ -330,8 +330,8 @@ td .sub{display:block;color:var(--ink-3);font-size:12px}
     const R=d.rekap||{}, st=d.status||{}, sb_=d.total||0, induk=R.totalKembali!=null?Number(R.totalKembali):null;
     const lain=induk!=null?Math.max(0,induk-sb_):null, selesai=st.hijau||0, proses=sb_-selesai;
     const pI=v=>induk&&v!=null?v/induk*100:null, pS=v=>sb_?v/sb_*100:null;
-    $("#mTanggal").textContent=tgl(R.tanggal); $("#mPeriode").textContent=R.periode||"–"; $("#mUpd").textContent=tgl(d.diperbarui);
-    const tile=(cls,icon,label,val,pv,sub)=>`<div class="tile ${cls}"><div class="th">${ICON[icon]}<div><div class="tl">${label}</div></div></div><div class="tv">${val==null?"–":nf.format(val)}</div><div class="tu">${sub}</div>${pv===undefined?"":`<div class="tp">${pct(pv)}</div>`}</div>`;
+    $("#mTanggal").textContent=tgl(R.tanggal); $("#mPeriode").textContent=R.periode||"\u2013"; $("#mUpd").textContent=tgl(d.diperbarui);
+    const tile=(cls,icon,label,val,pv,sub)=>`<div class="tile ${cls}"><div class="th">${ICON[icon]}<div><div class="tl">${label}</div></div></div><div class="tv">${val==null?"\u2013":nf.format(val)}</div><div class="tu">${sub}</div>${pv===undefined?"":`<div class="tp">${pct(pv)}</div>`}</div>`;
     $("#tiles").innerHTML=tile("biru","doc","Total SPPT Kembali Kel. Sempaja Selatan",induk,undefined,"rekap induk")
       +tile("merah","alert","Objek Ternyata di Kel. Sempaja Barat",sb_,pI(sb_),"dari total SPPT kembali")
       +tile("biru","x","Kembali karena Sebab Lain",lain,pI(lain),"dari total SPPT kembali")
@@ -340,8 +340,8 @@ td .sub{display:block;color:var(--ink-3);font-size:12px}
     const parts=[["accent",sb_,"Objek di Sempaja Barat","SPPT salah kelurahan akibat pemekaran"],["line-strong",lain||0,"Sebab lain","alamat, WP pindah, kepemilikan, dll."]];
     const T=Math.max(1,induk!=null?induk:sb_), r=52, C=2*Math.PI*r; let off=0;
     const arcs=parts.map(([c,v])=>{const len=Math.min(v,T)/T*C;const a=`<circle cx="75" cy="75" r="${r}" fill="none" stroke="var(--${c})" stroke-width="24" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 75 75)"/>`;off+=len;return a;}).join("");
-    $("#donutBox").innerHTML=`<svg class="donut" viewBox="0 0 150 150" role="img" aria-label="${pct(pI(sb_),1)} SPPT kembali objeknya di Sempaja Barat"><circle cx="75" cy="75" r="${r}" fill="none" stroke="var(--surface-2)" stroke-width="24"/>${arcs}<text x="75" y="78" text-anchor="middle" font-size="22" font-weight="800">${induk!=null?pct(pI(sb_),1):"–"}</text><text x="75" y="95" text-anchor="middle" font-size="9" fill="var(--ink-2)">objek di S. Barat</text></svg>
-      <div class="dleg">${parts.map(([c,v,l,t])=>`<div><i style="background:var(--${c})"></i><span><b>${l}</b> <b class="num">${nf.format(v)}</b> <span class="muted num">(${induk?pct(v/induk*100,1):"–"})</span><small>${t}</small></span></div>`).join("")}</div>`;
+    $("#donutBox").innerHTML=`<svg class="donut" viewBox="0 0 150 150" role="img" aria-label="${pct(pI(sb_),1)} SPPT kembali objeknya di Sempaja Barat"><circle cx="75" cy="75" r="${r}" fill="none" stroke="var(--surface-2)" stroke-width="24"/>${arcs}<text x="75" y="78" text-anchor="middle" font-size="22" font-weight="800">${induk!=null?pct(pI(sb_),1):"\u2013"}</text><text x="75" y="95" text-anchor="middle" font-size="9" fill="var(--ink-2)">objek di S. Barat</text></svg>
+      <div class="dleg">${parts.map(([c,v,l,t])=>`<div><i style="background:var(--${c})"></i><span><b>${l}</b> <b class="num">${nf.format(v)}</b> <span class="muted num">(${induk?pct(v/induk*100,1):"\u2013"})</span><small>${t}</small></span></div>`).join("")}</div>`;
     const iB=R.perBlok||{}, sB=d.perBlok||{};
     const rows=Object.keys(sB).map(k=>({k,sb:sB[k],all:Number(iB[k])||0})).sort((a,b)=>b.sb-a.sb);
     const other=Object.keys(iB).filter(k=>!sB[k]).reduce((a,k)=>a+(Number(iB[k])||0),0);
@@ -350,7 +350,7 @@ td .sub{display:block;color:var(--ink-3);font-size:12px}
       ${rows.map(x=>`<div class="bkrow"><span class="mono">Blok ${esc(x.k)}</span><span class="bb">${x.all?`<i class="all" style="width:${x.all/mx*100}%"></i>`:""}<i class="sb" style="width:${x.sb/mx*100}%"></i></span><span class="v"><b>${nf.format(x.sb)}</b>${x.all?` / ${nf.format(x.all)} <span class="muted">(${pct(x.sb/x.all*100,0)})</span>`:""}</span></div>`).join("")}
       ${other?`<p class="muted" style="margin:2px 0 0">Blok lain tanpa objek di Sempaja Barat: ${nf.format(other)} SPPT kembali.</p>`:""}</div>`:`<p class="muted">Belum ada data.</p>`;
     const s4=[["hijau",st.hijau||0,"Sudah tersampaikan"],["kuning",st.kuning||0,"Dalam proses"],["merah",st.merah||0,"Perlu tindak lanjut"],["abu",st.belum||0,"Belum disapa"]];
-    $("#tlBox").innerHTML=`<div class="tlst">${s4.map(([c,v,l])=>`<div><b style="background:var(--${c})">${nf.format(v)}</b><span>${l}<small>${sb_?pct(v/sb_*100,1):"–"}</small></span></div>`).join("")}</div>`;
+    $("#tlBox").innerHTML=`<div class="tlst">${s4.map(([c,v,l])=>`<div><b style="background:var(--${c})">${nf.format(v)}</b><span>${l}<small>${sb_?pct(v/sb_*100,1):"\u2013"}</small></span></div>`).join("")}</div>`;
     const L=d.perLokasi||[], lm=Math.max(1,...L.map(x=>x.n));
     $("#lokBox").innerHTML=L.length?`<div class="lok">${L.map(x=>`<div class="lokrow" title="${esc(x.lokasi)}"><span class="nm">${esc(x.lokasi)}</span><span class="bb" style="width:${x.n/lm*100}%"><i style="width:${x.selesai/x.n*100}%;background:var(--hijau)"></i><i style="flex:1;background:var(--accent)"></i></span><span class="v">${nf.format(x.selesai)} / ${nf.format(x.n)}</span></div>`).join("")}
       <div class="legend"><span><i style="background:var(--hijau)"></i>Sudah tersampaikan</span><span><i style="background:var(--accent)"></i>Belum tersampaikan</span></div></div>`:`<p class="muted">Belum ada data.</p>`;
@@ -360,3 +360,4 @@ td .sub{display:block;color:var(--ink-3);font-size:12px}
 </script>
 </body>
 </html>
+<!-- ===== AKHIR FILE Publik ===== -->

@@ -278,14 +278,14 @@ td .sub{display:block;color:var(--ink-3);font-size:12px}
 <div class="wrap" id="app">
   <header class="head">
     <div class="brand">
-      <span class="eyebrow">UPTD Pendapatan Daerah Wilayah III · Bapenda Kota Samarinda</span>
+      <span class="eyebrow">UPTD Pendapatan Daerah Wilayah III &#xb7; Bapenda Kota Samarinda</span>
       <h1>Dashboard Kendali <span>SAPA PAJAK</span></h1>
-      <p><b>SPPT PBB-P2 kembali Kel. Sempaja Selatan yang objeknya berada di Kel. Sempaja Barat</b> · dampak pemekaran wilayah (Perda Kota Samarinda No. 6 Tahun 2014)</p>
+      <p><b>SPPT PBB-P2 kembali Kel. Sempaja Selatan yang objeknya berada di Kel. Sempaja Barat</b> &#xb7; dampak pemekaran wilayah (Perda Kota Samarinda No. 6 Tahun 2014)</p>
     </div>
     <div class="metabox">
-      <div class="mb"><span class="eyebrow" id="mTanggalLbl">Data per tanggal</span><b id="mTanggal">–</b></div>
-      <div class="mb"><span class="eyebrow">Periode</span><b id="mPeriode">–</b></div>
-      <div class="mb" style="min-width:170px"><span class="eyebrow">Durasi implementasi</span><b id="mDurasi">60 Hari</b><div class="dur"><i id="mDurBar" style="width:0"></i></div><small id="mHari">–</small></div>
+      <div class="mb"><span class="eyebrow" id="mTanggalLbl">Data per tanggal</span><b id="mTanggal">&#x2013;</b></div>
+      <div class="mb"><span class="eyebrow">Periode</span><b id="mPeriode">&#x2013;</b></div>
+      <div class="mb" style="min-width:170px"><span class="eyebrow">Durasi implementasi</span><b id="mDurasi">60 Hari</b><div class="dur"><i id="mDurBar" style="width:0"></i></div><small id="mHari">&#x2013;</small></div>
       <div class="mb"><span class="eyebrow">Lokus pilot</span><b id="pKel">Kel. Sempaja Barat</b><small id="pTarget">400 SPPT sasaran</small></div>
       <div class="headbtns"><div class="who" id="whoami"></div><button class="btn" id="btnRekap" type="button">Tanggal &amp; periode</button><button class="btn ghost" id="btnSetting" type="button">Atur pilot</button><div style="display:flex;gap:10px;justify-content:flex-end"><a class="linkbtn" id="linkPublik" href="#" target="_blank" rel="noopener" hidden>Halaman publik</a><button class="linkbtn" type="button" id="btnLogout">Muat ulang data</button></div></div>
     </div>
@@ -361,7 +361,7 @@ td .sub{display:block;color:var(--ink-3);font-size:12px}
     </div>
     <div class="reg-head" style="border-bottom:1px solid var(--line)">
       <div class="filters">
-        <input type="search" id="fSearch" placeholder="Cari NOP, nama WP, alamat, blok…" aria-label="Cari">
+        <input type="search" id="fSearch" placeholder="Cari NOP, nama WP, alamat, blok&#x2026;" aria-label="Cari">
         <select id="fStatus" aria-label="Filter status"></select>
         <select id="fTahap" aria-label="Filter tahap"></select>
         <select id="fLokasi" aria-label="Filter lokasi"></select>
@@ -374,7 +374,7 @@ td .sub{display:block;color:var(--ink-3);font-size:12px}
     </div>
     <div class="tablewrap">
       <table>
-        <thead><tr><th>NOP / Wajib Pajak</th><th>Alamat objek · RT</th><th>Alamat WP</th><th>Penyebab kembali</th><th>Tahap</th><th>Hasil</th><th>Status</th><th>PIC</th><th>Diperbarui</th></tr></thead>
+        <thead><tr><th>NOP / Wajib Pajak</th><th>Alamat objek &#xb7; RT</th><th>Alamat WP</th><th>Penyebab kembali</th><th>Tahap</th><th>Hasil</th><th>Status</th><th>PIC</th><th>Diperbarui</th></tr></thead>
         <tbody id="tbody"></tbody>
       </table>
     </div>
@@ -500,9 +500,9 @@ const S={rekap:null,db:null,user:null,downloads:null,live:false,records:new Map(
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const pct=(a,b)=>b?Math.round(a/b*1000)/10:null;
-const fmtPct=v=>v==null?"–":(Number.isInteger(v)?v:v.toFixed(1)).toString().replace(".",",")+"%";
+const fmtPct=v=>v==null?"\u2013":(Number.isInteger(v)?v:v.toFixed(1)).toString().replace(".",",")+"%";
 const nf=new Intl.NumberFormat("id-ID");
-const fmtPct2=(v,d=2)=>v==null||!isFinite(v)?"–":v.toLocaleString("id-ID",{minimumFractionDigits:d,maximumFractionDigits:d})+"%";
+const fmtPct2=(v,d=2)=>v==null||!isFinite(v)?"\u2013":v.toLocaleString("id-ID",{minimumFractionDigits:d,maximumFractionDigits:d})+"%";
 const ICON={doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h8M9 17h8"/></svg>',
   send:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></svg>',
   x:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="11"/><path d="m8 8 8 8M16 8l-8 8" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>',
@@ -558,12 +558,12 @@ function compute(list){
     if(x.kepuasan){c.responden++; if(x.kepuasan==="puas"||x.kepuasan==="sangat_puas") c.puas++;}
   }
   c.kpi=[
-    {k:"Penelusuran SPPT sasaran",a:c.ditelusuri,b:target,t:90,note:"sudah disapa ÷ sasaran pilot"},
-    {k:"Kejelasan status",a:c.jelas,b:target,t:90,note:"hasil jelas ÷ sasaran pilot"},
-    {k:"Keberhasilan penyampaian ulang",a:c.tersampaikan,b:c.layak,t:70,note:"tersampaikan ÷ layak disampaikan ulang"},
-    {k:"Tindak lanjut perubahan data",a:c.diproses,b:c.temuan,t:90,note:"diproses/diteruskan ÷ temuan"},
-    {k:"Penyelesaian tindak lanjut",a:c.tlSelesai,b:c.perluTL,t:80,note:"selesai ÷ kasus perlu tindak lanjut"},
-    {k:"Kepuasan Wajib Pajak",a:c.puas,b:c.responden,t:80,note:"puas/sangat puas ÷ responden"}];
+    {k:"Penelusuran SPPT sasaran",a:c.ditelusuri,b:target,t:90,note:"sudah disapa \u00f7 sasaran pilot"},
+    {k:"Kejelasan status",a:c.jelas,b:target,t:90,note:"hasil jelas \u00f7 sasaran pilot"},
+    {k:"Keberhasilan penyampaian ulang",a:c.tersampaikan,b:c.layak,t:70,note:"tersampaikan \u00f7 layak disampaikan ulang"},
+    {k:"Tindak lanjut perubahan data",a:c.diproses,b:c.temuan,t:90,note:"diproses/diteruskan \u00f7 temuan"},
+    {k:"Penyelesaian tindak lanjut",a:c.tlSelesai,b:c.perluTL,t:80,note:"selesai \u00f7 kasus perlu tindak lanjut"},
+    {k:"Kepuasan Wajib Pajak",a:c.puas,b:c.responden,t:80,note:"puas/sangat puas \u00f7 responden"}];
   return c;
 }
 
@@ -571,22 +571,22 @@ function compute(list){
 function render(){
   const list=rows(); const c=compute(list);
   $("#demoBanner").hidden=!isDemo()||S.readOnly;
-  $("#pKel").textContent="Kel. "+(S.cfg.kelurahan||"–");
+  $("#pKel").textContent="Kel. "+(S.cfg.kelurahan||"\u2013");
   $("#pTarget").textContent=nf.format(c.target)+" SPPT sasaran";
   const start=Date.parse(S.cfg.mulai+"T00:00:00+08:00"); const hariKe=Math.floor((Date.now()-start)/864e5)+1; const H=Number(S.cfg.hari)||60;
   const hk=isNaN(start)?0:Math.max(0,Math.min(H,hariKe)); $("#mDurasi").textContent=H+" Hari"; $("#mDurBar").style.width=(hk/H*100)+"%";
-  $("#mHari").textContent=isNaN(start)?"–":hariKe<1?`mulai ${new Date(start).toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"})}`:hariKe>H?`selesai (${H} hari)`:`Hari ke-${hariKe} (${fmtPct2(hariKe/H*100,0)})`;
+  $("#mHari").textContent=isNaN(start)?"\u2013":hariKe<1?`mulai ${new Date(start).toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"})}`:hariKe>H?`selesai (${H} hari)`:`Hari ke-${hariKe} (${fmtPct2(hariKe/H*100,0)})`;
   renderRingkasan(list);
   document.querySelectorAll('[data-act]').forEach(b=>b.disabled=S.readOnly);
 
   const max=Math.max(1,...c.byTahap);
   $("#siklus").innerHTML=TAHAP.map((t,i)=>`<button type="button" class="step" data-tahap="${i}" style="background:none;border-top:0;border-left:0;border-bottom:0;text-align:left${S.filter.tahap===String(i)?';box-shadow:inset 0 0 0 2px var(--accent)':''}"><span class="n">${String(i+1).padStart(2,"0")}</span><span class="t">${t}</span><span class="c">${nf.format(c.byTahap[i])}</span><span class="bar" style="width:${c.byTahap[i]/max*100}%"></span></button>`).join("")
-    +`<div class="step eval"><span class="n">↻</span><span class="t">EVALUASI</span><span class="c">Bandingkan dengan baseline, lalu petakan siklus berikutnya</span></div>`;
+    +`<div class="step eval"><span class="n">\u21bb</span><span class="t">EVALUASI</span><span class="c">Bandingkan dengan baseline, lalu petakan siklus berikutnya</span></div>`;
 
   $("#kpis").innerHTML=c.kpi.map((k,i)=>{const v=pct(k.a,k.b);const cls=v==null?"":v>=k.t?"ok":v>=k.t*.6?"warn":"bad";
     return `<div class="kpi ${cls}"><span class="lbl">${i+1}. ${k.k}</span><div class="val"><b>${fmtPct(v)}</b><small class="num">${nf.format(k.a)} / ${nf.format(k.b)}</small></div>
     <div class="track" role="img" aria-label="${k.k} ${fmtPct(v)}, target ${k.t}%"><div class="fill" style="width:${Math.min(100,v||0)}%"></div><div class="tgt" style="left:${k.t}%"></div></div>
-    <div class="foot"><span>${k.note}</span><span>target ≥${k.t}%</span></div></div>`}).join("");
+    <div class="foot"><span>${k.note}</span><span>target \u2265${k.t}%</span></div></div>`}).join("");
 
   const perluData=list.filter(x=>x.temuanData&&!x.dataDiproses).length;
   $("#panelAStats").innerHTML=[
@@ -594,7 +594,7 @@ function render(){
     [c.ditelusuri,"sudah ditelusuri"],[c.temuan,"perlu pemutakhiran data"],[perluData,"temuan data belum diproses"]]
     .map(([n,l])=>`<div class="stat"><b>${nf.format(n)}</b><span>${l}</span></div>`).join("");
 
-  const hasLok=list.some(x=>x.lokasi); const G=S.groupBy||(hasLok?"lokasi":"rt"); const gk=x=>G==="lokasi"?(x.lokasi||"–"):(x.rt||"–");
+  const hasLok=list.some(x=>x.lokasi); const G=S.groupBy||(hasLok?"lokasi":"rt"); const gk=x=>G==="lokasi"?(x.lokasi||"\u2013"):(x.rt||"\u2013");
   $("#grpPick").hidden=!hasLok; $("#grpTitle").textContent=G==="lokasi"?"Sebaran per lokasi":"Sebaran per RT objek";
   $("#grpPick").querySelectorAll("button").forEach(b=>{b.classList.add("g");b.setAttribute("aria-pressed",b.dataset.grp===G)});
   const glabel=k=>G==="lokasi"?k:"RT "+k;
@@ -624,14 +624,14 @@ function render(){
 
 function filtered(list){
   const f=S.filter,q=f.q.trim().toLowerCase();
-  return list.filter(x=>(!f.status||(x.status||"belum")===f.status)&&(!f.tahap||String(x.tahap||0)===f.tahap)&&(!f.rt||(x.rt||"–")===f.rt)&&(!f.penyebab||x.penyebab===f.penyebab)&&(!f.lokasi||(x.lokasi||"–")===f.lokasi)&&(!f.blok||String(x.nop||"").split(".")[4]?.split("-")[0]===f.blok)
+  return list.filter(x=>(!f.status||(x.status||"belum")===f.status)&&(!f.tahap||String(x.tahap||0)===f.tahap)&&(!f.rt||(x.rt||"\u2013")===f.rt)&&(!f.penyebab||x.penyebab===f.penyebab)&&(!f.lokasi||(x.lokasi||"\u2013")===f.lokasi)&&(!f.blok||String(x.nop||"").split(".")[4]?.split("-")[0]===f.blok)
     &&(!q||[x.nop,x.nama,x.alamat,x.alamatWp,x.blokNo,x.lokasi,x.pic,x.kendala].some(v=>String(v||"").toLowerCase().includes(q))))
    .sort(S.sort==="baru"?(a,b)=>String(b.updatedAt||"").localeCompare(String(a.updatedAt||""))||(a.no||0)-(b.no||0)
      :(a,b)=>(a.no??1e9)-(b.no??1e9)||String(a.nop).localeCompare(String(b.nop)));
 }
 function fillSelect(el,opts,cur){el.innerHTML=opts.map(([v,l])=>`<option value="${esc(v)}"${v===cur?" selected":""}>${esc(l)}</option>`).join("");}
 function renderTable(list){
-  const rtKeys=[...new Set(list.map(x=>x.rt||"–"))].sort();
+  const rtKeys=[...new Set(list.map(x=>x.rt||"\u2013"))].sort();
   fillSelect($("#fStatus"),[["","Semua status"],...STATUS_ORDER.map(s=>[s,STATUS[s].l])],S.filter.status);
   fillSelect($("#fTahap"),[["","Semua tahap"],...TAHAP.map((t,i)=>[String(i),t])],S.filter.tahap);
   fillSelect($("#fRt"),[["","Semua RT"],...rtKeys.map(k=>[k,"RT "+k])],S.filter.rt);
@@ -643,13 +643,13 @@ function renderTable(list){
   fillSelect($("#fPenyebab"),[["","Semua penyebab"],...Object.entries(PENYEBAB)],S.filter.penyebab);
   const f=filtered(list); const shown=f.slice(0,S.limit);
   const src=[...new Set(list.map(x=>x.sumber).filter(Boolean))];
-  $("#regCount").textContent=isDemo()?"Menampilkan data contoh":`${nf.format(list.length)} SPPT tercatat${src.length?" · sumber: "+src.join(", "):""}`;
+  $("#regCount").textContent=isDemo()?"Menampilkan data contoh":`${nf.format(list.length)} SPPT tercatat${src.length?" \u00b7 sumber: "+src.join(", "):""}`;
   $("#tbody").innerHTML=shown.map(x=>{const flags=[x.layakUlang&&"Layak ulang",x.temuanData&&(x.dataDiproses?"Data diproses":"Temuan data"),x.perluTL&&"Perlu TL"].filter(Boolean);
-    return `<tr data-open="${esc(x.id)}" tabindex="0"><td><span class="mono">${esc(x.nop||"(tanpa NOP)")}</span><span class="sub">${esc(x.nama||"–")}</span></td>
-    <td>${esc(x.alamat||"–")}<span class="sub"><span class="mono">RT ${esc(x.rt||"–")}</span>${x.lokasi?" · "+esc(x.lokasi):""}${x.no?` · No. ${x.no}`:""}</span></td><td style="max-width:240px">${esc(x.alamatWp||"–")}</td><td>${esc(PENYEBAB[x.penyebab]||"–")}</td>
+    return `<tr data-open="${esc(x.id)}" tabindex="0"><td><span class="mono">${esc(x.nop||"(tanpa NOP)")}</span><span class="sub">${esc(x.nama||"\u2013")}</span></td>
+    <td>${esc(x.alamat||"\u2013")}<span class="sub"><span class="mono">RT ${esc(x.rt||"\u2013")}</span>${x.lokasi?" \u00b7 "+esc(x.lokasi):""}${x.no?` \u00b7 No. ${x.no}`:""}</span></td><td style="max-width:240px">${esc(x.alamatWp||"\u2013")}</td><td>${esc(PENYEBAB[x.penyebab]||"\u2013")}</td>
     <td><span class="tahap">${TAHAP[x.tahap||0]}</span></td><td>${esc(HASIL[x.hasil||""])}${flags.length?`<div class="flags">${flags.map(t=>`<span class="flag">${t}</span>`).join("")}</div>`:""}</td>
-    <td><span class="pill ${x.status||"belum"}">${STATUS[x.status||"belum"].l}</span></td><td>${esc(x.pic||"–")}</td>
-    <td class="num muted">${x.updatedAt?new Date(x.updatedAt).toLocaleDateString("id-ID",{day:"numeric",month:"short"}):"–"}${x.updatedBy&&S.names[x.updatedBy]?`<span class="sub">${esc(S.names[x.updatedBy])}</span>`:""}</td></tr>`}).join("");
+    <td><span class="pill ${x.status||"belum"}">${STATUS[x.status||"belum"].l}</span></td><td>${esc(x.pic||"\u2013")}</td>
+    <td class="num muted">${x.updatedAt?new Date(x.updatedAt).toLocaleDateString("id-ID",{day:"numeric",month:"short"}):"\u2013"}${x.updatedBy&&S.names[x.updatedBy]?`<span class="sub">${esc(S.names[x.updatedBy])}</span>`:""}</td></tr>`}).join("");
   $("#regEmpty").hidden=f.length>0;
   $("#regShow").textContent=f.length?`Menampilkan ${nf.format(shown.length)} dari ${nf.format(f.length)} SPPT`:"";
   $("#btnMore").hidden=shown.length>=f.length;
@@ -667,10 +667,10 @@ function renderRingkasan(list){
   const induk=num(R.totalKembali), sb=list.length, lain=induk!=null?Math.max(0,induk-sb):null;
   const selesai=list.filter(x=>x.status==="hijau").length, proses=sb-selesai;
   const pI=v=>induk&&v!=null?v/induk*100:null, pS=v=>sb?v/sb*100:null;
-  $("#mTanggal").textContent=R.tanggal?new Date(R.tanggal+"T00:00:00").toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"}):"–";
-  $("#mPeriode").textContent=R.periode||"–";
+  $("#mTanggal").textContent=R.tanggal?new Date(R.tanggal+"T00:00:00").toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"}):"\u2013";
+  $("#mPeriode").textContent=R.periode||"\u2013";
   $("#mTanggalLbl").textContent=demoR?"Data per tanggal (contoh)":"Data per tanggal";
-  const tile=(cls,icon,label,val,pv,sub)=>`<div class="tile ${cls}"><div class="th">${ICON[icon]}<div><div class="tl">${label}</div></div></div><div class="tv">${val==null?"–":nf.format(val)}</div><div class="tu">${sub||"SPPT PBB-P2"}</div>${pv===undefined?"":`<div class="tp">${fmtPct2(pv)}</div>`}</div>`;
+  const tile=(cls,icon,label,val,pv,sub)=>`<div class="tile ${cls}"><div class="th">${ICON[icon]}<div><div class="tl">${label}</div></div></div><div class="tv">${val==null?"\u2013":nf.format(val)}</div><div class="tu">${sub||"SPPT PBB-P2"}</div>${pv===undefined?"":`<div class="tp">${fmtPct2(pv)}</div>`}</div>`;
   $("#tiles").innerHTML=tile("biru","doc","Total SPPT Kembali Kel. Sempaja Selatan",induk,undefined,"rekap induk")
     +tile("merah","alert","Objek Ternyata di Kel. Sempaja Barat",sb,pI(sb),"dari total SPPT kembali")
     +tile("biru","x","Kembali karena Sebab Lain",lain,pI(lain),"dari total SPPT kembali")
@@ -678,7 +678,7 @@ function renderRingkasan(list){
     +tile("kuning","gear","Dalam Penanganan",proses,pS(proses),"dari objek di Sempaja Barat");
   $("#rekapDemo").hidden=!demoR||S.readOnly;
   const warn=[];
-  if(!demoR&&induk==null) warn.push("Jumlah SPPT kembali di rekap induk belum diisi. Klik “Perbarui rekap induk”.");
+  if(!demoR&&induk==null) warn.push("Jumlah SPPT kembali di rekap induk belum diisi. Klik \u201cPerbarui rekap induk\u201d.");
   if(induk!=null&&sb>induk) warn.push(`Register berisi ${nf.format(sb)} SPPT, lebih banyak dari total SPPT kembali di rekap induk (${nf.format(induk)}).`);
   $("#rekapWarn").hidden=!warn.length; $("#rekapWarn").textContent=warn.join(" ");
 
@@ -686,12 +686,12 @@ function renderRingkasan(list){
   const parts=[["accent",sb,"Objek di Sempaja Barat","SPPT salah kelurahan akibat pemekaran"],["line-strong",lain||0,"Sebab lain","alamat, WP pindah, kepemilikan, dll."]];
   const T=Math.max(1,(induk!=null?induk:sb)), r=52, C=2*Math.PI*r; let off=0;
   const arcs=parts.map(([col,v])=>{const len=Math.min(v,T)/T*C;const a=`<circle cx="75" cy="75" r="${r}" fill="none" stroke="var(--${col})" stroke-width="24" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 75 75)"/>`;off+=len;return a;}).join("");
-  $("#donutBox").innerHTML=`<svg class="donut" viewBox="0 0 150 150" role="img" aria-label="${fmtPct2(pI(sb),1)} SPPT kembali objeknya di Sempaja Barat"><circle cx="75" cy="75" r="${r}" fill="none" stroke="var(--surface-2)" stroke-width="24"/>${arcs}<text x="75" y="78" text-anchor="middle" font-size="22" font-weight="800">${induk!=null?fmtPct2(pI(sb),1):"–"}</text><text x="75" y="95" text-anchor="middle" font-size="9" fill="var(--ink-2)">objek di S. Barat</text></svg>
-    <div class="dleg">${parts.map(([col,v,l,d])=>`<div><i style="background:var(--${col})"></i><span><b>${l}</b> <b class="num">${nf.format(v)}</b> <span class="muted num">(${induk?fmtPct2(v/induk*100,1):"–"})</span><small>${d}</small></span></div>`).join("")}
-    <div><i style="background:transparent"></i><span class="muted">Total ${induk!=null?nf.format(induk):"–"} SPPT kembali di rekap induk Kel. Sempaja Selatan</span></div></div>`;
+  $("#donutBox").innerHTML=`<svg class="donut" viewBox="0 0 150 150" role="img" aria-label="${fmtPct2(pI(sb),1)} SPPT kembali objeknya di Sempaja Barat"><circle cx="75" cy="75" r="${r}" fill="none" stroke="var(--surface-2)" stroke-width="24"/>${arcs}<text x="75" y="78" text-anchor="middle" font-size="22" font-weight="800">${induk!=null?fmtPct2(pI(sb),1):"\u2013"}</text><text x="75" y="95" text-anchor="middle" font-size="9" fill="var(--ink-2)">objek di S. Barat</text></svg>
+    <div class="dleg">${parts.map(([col,v,l,d])=>`<div><i style="background:var(--${col})"></i><span><b>${l}</b> <b class="num">${nf.format(v)}</b> <span class="muted num">(${induk?fmtPct2(v/induk*100,1):"\u2013"})</span><small>${d}</small></span></div>`).join("")}
+    <div><i style="background:transparent"></i><span class="muted">Total ${induk!=null?nf.format(induk):"\u2013"} SPPT kembali di rekap induk Kel. Sempaja Selatan</span></div></div>`;
 
   // per blok
-  const blokOf=x=>(String(x.nop||"").split(".")[4]||"–").split("-")[0];
+  const blokOf=x=>(String(x.nop||"").split(".")[4]||"\u2013").split("-")[0];
   const sbB={}; for(const x of list){const k=blokOf(x);sbB[k]=(sbB[k]||0)+1;}
   const iB=R.perBlok||{}; const keys=[...new Set([...Object.keys(iB),...Object.keys(sbB)])];
   const rowsB=keys.map(k=>({k,all:Number(iB[k])||0,sb:sbB[k]||0})).filter(r=>r.sb>0).sort((a,b)=>b.sb-a.sb);
@@ -731,11 +731,11 @@ function editRecord(id){
   const x=id?rows().find(r=>r.id===id):{nop:"",nama:"",alamat:"",rt:"",penyebab:"belum_diketahui",tahap:0,status:"belum",hasil:"",pic:"",kendala:"",catatan:"",kepuasan:""};
   if(!x) return; S.editing={id:id||null,demo:!!x.demo,tahap:x.tahap||0,status:x.status||"belum"};
   const ro=S.readOnly||x.demo;
-  openDrawer(`<header><div><span class="eyebrow">${id?"SPPT kembali":"SPPT baru"}${x.demo?" · data contoh":""}</span><h2 id="drTitle" class="mono">${esc(x.nop||"Tambah SPPT")}</h2></div><button class="btn ghost close" type="button" data-close>Tutup</button></header>
+  openDrawer(`<header><div><span class="eyebrow">${id?"SPPT kembali":"SPPT baru"}${x.demo?" \u00b7 data contoh":""}</span><h2 id="drTitle" class="mono">${esc(x.nop||"Tambah SPPT")}</h2></div><button class="btn ghost close" type="button" data-close>Tutup</button></header>
   <form class="body" id="recForm">
     ${x.demo?`<p class="help" style="background:var(--kuning-soft);padding:8px 10px;border-radius:6px">Ini data contoh dan tidak bisa disimpan. Impor atau tambahkan SPPT asli untuk mulai mencatat.</p>`:""}
-    ${x.sumber?`<fieldset class="fieldset"><legend>Data SPPT · ${esc(x.sumber)}${x.no?` · No. ${x.no}`:""}</legend>
-      <dl class="info">${[["Lokasi",x.lokasi],["Alamat objek",x.alamat],["Blok &amp; No",x.blokNo],["RT objek",x.rt],["Alamat WP",x.alamatWp],["Luas tanah / bangunan",(x.luasTanah!=null?nf.format(x.luasTanah)+" m²":"–")+" / "+(x.luasBangunan!=null?nf.format(x.luasBangunan)+" m²":"–")],["NIB",x.nib],["Keterangan awal",x.ketAwal]].filter(r=>r[1]).map(([k,v])=>`<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl></fieldset>`:""}
+    ${x.sumber?`<fieldset class="fieldset"><legend>Data SPPT \u00b7 ${esc(x.sumber)}${x.no?` \u00b7 No. ${x.no}`:""}</legend>
+      <dl class="info">${[["Lokasi",x.lokasi],["Alamat objek",x.alamat],["Blok &amp; No",x.blokNo],["RT objek",x.rt],["Alamat WP",x.alamatWp],["Luas tanah / bangunan",(x.luasTanah!=null?nf.format(x.luasTanah)+" m\u00b2":"\u2013")+" / "+(x.luasBangunan!=null?nf.format(x.luasBangunan)+" m\u00b2":"\u2013")],["NIB",x.nib],["Keterangan awal",x.ketAwal]].filter(r=>r[1]).map(([k,v])=>`<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl></fieldset>`:""}
     <div class="grid2">
       <div class="field"><label for="iNop">NOP</label><input id="iNop" class="mono" value="${esc(x.nop)}" placeholder="64.72.050.012.001-0123.0" ${id?"readonly":""}></div>
       <div class="field"><label for="iRt">RT</label><input id="iRt" value="${esc(x.rt)}" placeholder="012"></div>
@@ -754,7 +754,7 @@ function editRecord(id){
       <label><input type="checkbox" id="cPerluTL" ${x.perluTL?"checked":""}> Memerlukan tindak lanjut PIC/bidang</label>
     </div></fieldset>
     <div class="grid2">
-      <div class="field"><label for="iPic">PIC / unit</label><select id="iPic">${PIC_OPTS.map(p=>`<option value="${esc(p)}"${p===(x.pic||"")?" selected":""}>${p||"–"}</option>`).join("")}${x.pic&&!PIC_OPTS.includes(x.pic)?`<option selected>${esc(x.pic)}</option>`:""}</select></div>
+      <div class="field"><label for="iPic">PIC / unit</label><select id="iPic">${PIC_OPTS.map(p=>`<option value="${esc(p)}"${p===(x.pic||"")?" selected":""}>${p||"\u2013"}</option>`).join("")}${x.pic&&!PIC_OPTS.includes(x.pic)?`<option selected>${esc(x.pic)}</option>`:""}</select></div>
       <div class="field"><label for="iPuas">Survei kepuasan WP</label><select id="iPuas">${opt(KEPUASAN,x.kepuasan)}</select></div>
     </div>
     <div class="field"><label for="iKendala">Kendala / kebutuhan koordinasi</label><input id="iKendala" value="${esc(x.kendala)}" placeholder="mis. RT belum terbentuk setelah pemekaran"></div>
@@ -834,7 +834,7 @@ function openImport(){
         else await ref.set({nop:p.nop,nama:p.nama,alamat:p.alamat,rt:p.rt,penyebab:p.penyebab||"belum_diketahui",tahap:0,status:"belum",hasil:"",layakUlang:false,tersampaikanUlang:false,temuanData:false,dataDiproses:false,perluTL:false,pic:"",kepuasan:"",kendala:"",catatan:"",updatedAt:new Date().toISOString(),updatedBy:S.myId||null});
         done++; }catch(err){fail++; if(err&&(err.code==="quota_exceeded"||err.code==="invalid_argument")) throw err;}}))
       .catch(err=>{writeFail(err);i=ok.length;});
-      pv.textContent=`Mengimpor… ${done} dari ${ok.length}`;}
+      pv.textContent=`Mengimpor\u2026 ${done} dari ${ok.length}`;}
     toast(`${done} SPPT diimpor${fail?`, ${fail} gagal`:""}`); if(done) closeDrawer(); else go.disabled=false;});
 }
 
@@ -850,12 +850,12 @@ function setupExcelImport(){
       +(rk?` Rekap induk "${k.name}": ${nf.format(rk.totalKembali)} SPPT kembali di ${Object.keys(rk.perBlok).length} blok.`:"")
       +(!isAdmin?" Rekap induk dan target pilot hanya bisa diubah admin.":"");
     go.disabled=!recs.length||S.readOnly;};
-  fileIn.addEventListener("change",async()=>{const f=fileIn.files[0];if(!f)return;pv.textContent="Membaca file…";$("#xOpts").hidden=false;
+  fileIn.addEventListener("change",async()=>{const f=fileIn.files[0];if(!f)return;pv.textContent="Membaca file\u2026";$("#xOpts").hidden=false;
     try{sheets=await X.readWorkbook(f);}catch(e){pv.textContent="File tidak bisa dibaca: "+(e.message||e);return;}
     const withNop=sheets.map((s,i)=>({s,i})).filter(o=>o.s.nopCount>0);
-    if(!withNop.length){pv.textContent="Tidak ditemukan baris NOP (64.72…) di file ini.";return;}
+    if(!withNop.length){pv.textContent="Tidak ditemukan baris NOP (64.72\u2026) di file ini.";return;}
     const opt=o=>`<option value="${o.i}">${esc(o.s.name)} (${nf.format(o.s.nopCount)} NOP)</option>`;
-    reg.innerHTML=withNop.map(opt).join(""); rek.innerHTML=`<option value="">— tidak diperbarui —</option>`+withNop.map(opt).join("");
+    reg.innerHTML=withNop.map(opt).join(""); rek.innerHTML=`<option value="">\u2014 tidak diperbarui \u2014</option>`+withNop.map(opt).join("");
     const r=withNop.find(o=>/barat/i.test(o.s.name)&&/sortir|sppt/i.test(o.s.name))||withNop[0]; reg.value=String(r.i);
     const k=withNop.find(o=>/^rekap/i.test(o.s.name)); rek.value=k&&isAdmin?String(k.i):"";
     preview();});
@@ -867,7 +867,7 @@ function setupExcelImport(){
         layakUlang:x.tersampaikan,tersampaikanUlang:x.tersampaikan,temuanData:false,dataDiproses:false,perluTL:false,pic:"",kepuasan:"",kendala:"",
         catatan:/tunggakan/i.test(x.sheet.ketAwal)?"Tidak ada tunggakan (keterangan awal).":"",importedAt:now};
       data.updatedAt=now; delete data.id; return {id:x.id,data};});
-    window.SAPA.state.onProgress=(d,t)=>{pv.textContent=`Menyimpan… ${nf.format(d)} dari ${nf.format(t)} SPPT`;};
+    window.SAPA.state.onProgress=(d,t)=>{pv.textContent=`Menyimpan\u2026 ${nf.format(d)} dari ${nf.format(t)} SPPT`;};
     try{
       await window.SAPA.bulkUpsert(rowsOut);
       if(k&&isAdmin){const rk=X.parseRekap(k);await S.db.doc("config/rekap").set({...(S.rekap||{}),...rk,sumber:k.name});}
@@ -904,7 +904,7 @@ async function exportCsv(){
   const head=["No","Lokasi","NOP","Nama WP","Alamat objek","Blok & No","RT objek","Alamat WP","L. Tanah","L. Bangunan","NIB","Keterangan awal","Penyebab","Tahap","Status","Hasil","Layak ulang","Tersampaikan ulang","Temuan data","Data diproses","Perlu TL","PIC","Kepuasan","Kendala","Catatan","Diperbarui"];
   const yn=b=>b?"Ya":"Tidak";
   const lines=[head.join(";"),...list.map(x=>[x.no,x.lokasi,x.nop,x.nama,x.alamat,x.blokNo,x.rt,x.alamatWp,x.luasTanah,x.luasBangunan,x.nib,x.ketAwal,PENYEBAB[x.penyebab]||"",TAHAP[x.tahap||0],STATUS[x.status||"belum"].l,HASIL[x.hasil||""],yn(x.layakUlang),yn(x.tersampaikanUlang),yn(x.temuanData),yn(x.dataDiproses),yn(x.perluTL),x.pic,KEPUASAN[x.kepuasan||""],x.kendala,x.catatan,x.updatedAt].map(csvCell).join(";"))];
-  const data="﻿"+lines.join("\r\n"); const name=`register-sapa-pajak-${new Date().toISOString().slice(0,10)}${isDemo()?"-contoh":""}.csv`;
+  const data="\ufeff"+lines.join("\r\n"); const name=`register-sapa-pajak-${new Date().toISOString().slice(0,10)}${isDemo()?"-contoh":""}.csv`;
   if(S.downloads){try{await S.downloads.save({filename:name,data});toast("File CSV disiapkan");}catch(err){if(err&&err.code!=="declined")toast("Ekspor gagal. Coba lagi.");}return;}
   toast("Ekspor tidak tersedia di tampilan ini.");
 }
@@ -944,7 +944,7 @@ render();
   S.db=db;S.user=user;S.downloads=downloads;
   if(!db){$("#connNotice").hidden=false;$("#connNotice").textContent="Penyimpanan bersama tidak tersedia untuk akun ini. Dashboard hanya menampilkan data contoh.";S.readOnly=true;render();return;}
   const st=window.SAPA.state, PERAN={admin:"Admin",petugas:"Petugas",pemantau:"Pemantau (lihat saja)"};
-  $("#whoami").innerHTML=`<b>${esc(st.nama)}</b> · ${PERAN[st.peran]||st.peran}`;
+  $("#whoami").innerHTML=`<b>${esc(st.nama)}</b> \u00b7 ${PERAN[st.peran]||st.peran}`;
   if(st.peran!=="admin"){$("#btnRekap").hidden=true;$("#btnSetting").hidden=true;}
   if(user){try{S.myId=await user.id();}catch(_){} try{S.canWrite=await user.can("data.write");}catch(_){S.canWrite=null;} if(S.canWrite===false)S.readOnly=true;}
   db.doc("config/rekap").onSnapshot(s=>{S.rekap=s.exists?{...DEFAULT_REKAP,...s.data()}:null;render();},()=>{});
@@ -959,3 +959,4 @@ render();
 
 </body>
 </html>
+<!-- ===== AKHIR FILE Index ===== -->
